@@ -14,7 +14,7 @@ def get_options(parser):
 def run_command(opts):
     """ Save a new configuration value. """
     if opts.linkroot:
-        linkroot = opts.linkroot.rstrip('/')                 # remove trailing slash
-        utils.validate_linkroot(linkroot)                    # validate the specified path
-        open(os.path.join(linkroot, LINKROOT), 'a').close()  # touch the linkroot/LINKROOT file
-        utils.save_config('linkroot', linkroot)              # save the configuration
+        linkroot = opts.linkroot.rstrip('/')
+        utils.validate_linkroot(linkroot)
+        open(os.path.join(linkroot, LINKROOT), 'a').close()
+        utils.save_config('linkroot', linkroot)
