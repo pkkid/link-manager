@@ -228,7 +228,7 @@ if __name__ == '__main__':
     log.setLevel(opts.loglevel)
     opts.update(_validate_linkroot(opts.root) if opts.root else _get_config())
     if not opts.linkroot:
-        raise SystemExit('No ROOT specified, please run: links.py --root=<ROOT>')
+        raise SystemExit('No root specified, please run `links.py --root=ROOT`')
     callback = globals().get(opts.command)
     if callback:
         callback(opts)
