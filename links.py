@@ -2,7 +2,6 @@
 # encoding: utf-8
 import json, os, shutil, sys
 import argparse, fnmatch, logging
-from humanize import naturalsize
 
 log = logging.getLogger('linkmanager')
 streamhandler = logging.StreamHandler(sys.stdout)
