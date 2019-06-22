@@ -126,7 +126,7 @@ def _validate_linkroot(linkroot):
 
 def _validate_paths(paths, linkroot):
     """ Validate the specified path is appropriate. """
-    for path in opts.path:
+    for path in paths:
         if not os.path.exists(path):
             raise SystemExit(f'The specified path does not exist: {path}')
         if not path.startswith(HOME):
@@ -137,8 +137,8 @@ def _validate_paths(paths, linkroot):
 
 def mklink(opts):
     """ Create a new entry in LINKROOT to sync. """
-    _validate_paths(opts.path, opts.linkroot)
-    for path in opts.path:
+    _validate_paths(opts.paths, opts.linkroot)
+    for path in opts.paths:
         dest = path.replace(HOME, opts.linkroot)
         if os.path.exists(dest):
             log.info(f'Link already exists {_(dest)}')
@@ -183,8 +183,8 @@ def cplinks(opts):
 
 def rmlink(opts):
     """ Remove an entry from LINKROOT. """
-    _validate_paths(opts.path, opts.linkroot)
-    for path in opts.path:
+    _validate_paths(opts.paths, opts.linkroot)
+    for path in opts.paths:
         source = path.replace(HOME, opts.linkroot)
         if not os.path.exists(source):
             log.info(f'Link does not exist {_(source)}')
@@ -218,10 +218,10 @@ if __name__ == '__main__':
     parser.add_argument('--loglevel', default='INFO', help=f'sets the python log level')
     commands = parser.add_subparsers(dest='command', required=True)
     commands_mklink = commands.add_parser('mklink', help=f'create a new entry in {LINKROOT} to sync')
-    commands_mklink.add_argument('path', nargs='+', help='path to file or directory to be created')
+    commands_mklink.add_argument('paths', nargs='+', help='path to file or directory to be created')
     commands_cplinks = commands.add_parser('cplinks', help='symlink synced files and dirs to home directory')
     commands_rmlink = commands.add_parser('rmlink', help=f'remove an entry from {LINKROOT}')
-    commands_rmlink.add_argument('path', nargs='+', help='path to file or directory to be removed')
+    commands_rmlink.add_argument('paths', nargs='+', help='path to file or directory to be removed')
     commands_inventory = commands.add_parser('inventory', help='list the inventory of links in LINKROOT')
     # Perform specified tasks
     opts = Bunch(vars(parser.parse_args()))
