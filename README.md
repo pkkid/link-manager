@@ -9,7 +9,7 @@ provides the following core commands:
      file with a symlink pointing to it.
 * **`cplinks`** - Iterate all files in the sync location and replace the original
      files with symlinks pointing to them.
-* **`rmlink PATH`** - The opposite of mklink. Copies the synced file back to it's
+* **`rmlink \<PATH\>`** - Opposite of mklink. Copies the synced file back to it's
      original location to no longer by synced.
 
 ## Example Usage
