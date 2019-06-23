@@ -16,8 +16,8 @@ def get_options(parser):
 
 def run_command(opts):
     """ Create a new entry in LINKROOT to sync. """
-    utils.validate_paths(opts.paths, opts.linkroot)
-    for path in opts.paths:
+    paths = utils.validate_paths(opts.paths, opts.linkroot)
+    for path in paths:
         dest = path.replace(HOME, opts.linkroot)
         if os.path.exists(dest):
             log.info(f'Link already exists {_(dest)}')

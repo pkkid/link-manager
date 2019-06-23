@@ -15,8 +15,8 @@ def get_options(parser):
 
 def run_command(opts):
     """ Remove an entry from LINKROOT. """
-    utils.validate_paths(opts.paths, opts.linkroot)
-    for path in opts.paths:
+    paths = utils.validate_paths(opts.paths, opts.linkroot)
+    for path in paths:
         source = path.replace(HOME, opts.linkroot)
         if not os.path.exists(source):
             log.info(f'Link does not exist {_(source)}')

@@ -24,7 +24,7 @@ def _add_global_options(command):
 if __name__ == '__main__':
     # Build the command line arguments
     parser = argparse.ArgumentParser(description='Manage links in shared directory.')
-    commands = parser.add_subparsers(dest='command', required=True)
+    commands = parser.add_subparsers(dest='command')
     for module in MODULES:
         command = module.get_options(commands)
         _add_global_options(command)

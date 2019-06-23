@@ -128,6 +128,7 @@ def validate_linkroot(linkroot):
 
 def validate_paths(paths, linkroot):
     """ Validate the specified path is appropriate. """
+    paths = [os.path.abspath(path) for path in paths]
     for path in paths:
         if not os.path.exists(path):
             raise SystemExit(f'The specified path does not exist: {path}')
@@ -135,3 +136,4 @@ def validate_paths(paths, linkroot):
             raise SystemExit(f'Specified path must exist in your home directory.')
         if path.startswith(linkroot):
             raise SystemExit(f'Specified path must not be in the LINKROOT directory.')
+    return paths
