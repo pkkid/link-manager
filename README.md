@@ -6,7 +6,7 @@ sync location and create the corresponding symlink to it's original location. It
 provides the following core commands:
 
 * **`mklink <PATH>`** - Copy a file to the sync location and replace the original
-     file with a symlink pointing to the now synced file.
+     file with a symlink pointing to it.
 * **`cplinks`** - Iterate all files in the sync location and replace the original
      files with symlinks pointing to them.
 * **`rmlink PATH`** - The opposite of mklink. Copies the synced file back to it's
