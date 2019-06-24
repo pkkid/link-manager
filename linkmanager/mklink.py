@@ -13,18 +13,19 @@ def get_options(parser):
 
 
 def run_command(opts):
-    """ Create a new entry in LINKROOT to sync. """
-    paths = utils.validate_paths(opts.paths, opts.home, opts.linkroot)
-    for path in paths:
-        dest = path.replace(opts.home, opts.linkroot)
-        if os.path.exists(dest):
-            log.info(f'Link already exists {dest}')
-        elif os.path.isfile(path):
-            log.info(f'Copying File {path} to {dest}')
-            os.makedirs(os.path.dirname(dest), exist_ok=True)
-            shutil.copyfile(path, dest)
-        elif os.path.isdir(path):
-            log.info(f'Copying Dir {path} to {dest}')
-            shutil.copytree(path, dest)
-            open(os.path.join(dest, LINKDIR), 'a').close()
-    cplinks.run_command(opts)
+    """ Create a new entry in linkroot to sync. """
+    homepaths = utils.validate_paths(opts.paths, opts.home, opts.linkroot)
+    for homepath in homepaths:
+        syncpath = homepath.replace(opts.home, opts.linkroot)
+        if os.path.exists(syncpath):
+            log.info(f'Link already exists {syncpath}')
+        elif os.path.isfile(homepath):
+            log.info(f'Copying file {homepath} to {syncpath}')
+            os.makedirs(os.path.dirname(syncpath), exist_ok=True)
+            shutil.copyfile(homepath, syncpath)
+        elif os.path.isdir(homepath):
+            log.info(f'Copying dir {homepath} to {syncpath}')
+            shutil.copytree(homepath, syncpath)
+            open(os.path.join(syncpath, LINKDIR), 'a').close()
+        # Run cplink against this syncpath
+        cplinks.create_symlink(syncpath, opts.home, opts.linkroot, opts.dryrun)

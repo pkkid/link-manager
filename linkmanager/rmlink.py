@@ -1,9 +1,7 @@
 # encoding: utf-8
 import os, shutil
-from linkmanager import HOME
-from linkmanager import LINKROOT, LINKDIR
+from linkmanager import DELETED, LINKROOT, LINKDIR
 from linkmanager import log, utils
-_ = utils.short_home
 
 
 def get_options(parser):
@@ -13,21 +11,29 @@ def get_options(parser):
     return options
 
 
+def remove_syncpath(syncpath, home, linkroot, dryrun=False):
+    """ Cleanup a removed syncpath. Copy original contents back into place. """
+    # TODO: Does this work for symlinks?
+    homepath = syncpath.replace(linkroot, home).replace(DELETED, '')
+    if os.path.islink(homepath) and os.path.isfile(syncpath):
+        log.info(f'Unlinking file {homepath}')
+        if not dryrun:
+            utils.safe_unlink(homepath)
+            shutil.copyfile(syncpath, homepath)
+    elif os.path.islink(homepath) and os.path.isdir(syncpath):
+        log.info(f'Unlinking dir {homepath}')
+        if not dryrun:
+            utils.safe_unlink(homepath)
+            shutil.copytree(syncpath, homepath)
+            utils.safe_unlink(os.path.join(homepath, LINKDIR))
+
+
 def run_command(opts):
     """ Remove an entry from LINKROOT. """
-    paths = utils.validate_paths(opts.paths, opts.linkroot)
-    for path in paths:
-        source = path.replace(HOME, opts.linkroot)
-        if not os.path.exists(source):
-            log.info(f'Link does not exist {_(source)}')
-        elif os.path.islink(path) and os.path.isfile(path):
-            log.info(f'Unlinking File {_(path)}')
-            if not opts.dryrun:
-                utils.safe_unlink(path)
-                os.rename(source, path)
-        elif os.path.islink(path) and os.path.isdir(path):
-            log.info(f'Unlinking Dir {_(path)}')
-            if not opts.dryrun:
-                utils.safe_unlink(path)
-                shutil.move(source, path)
-                utils.safe_unlink(os.path.join(path, LINKDIR))
+    homepaths = utils.validate_paths(opts.paths, opts.linkroot)
+    for homepath in homepaths:
+        syncpath = homepath.replace(opts.home, opts.linkroot)
+        if not os.path.exists(syncpath):
+            log.info(f'Link does not exist {syncpath}')
+        remove_syncpath(syncpath, opts.home, opts.linkroot, opts.dryrun)
+        os.rename(syncpath, f'{syncpath}{DELETED}')

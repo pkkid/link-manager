@@ -31,5 +31,5 @@ def test_mklink_subdir_file(opts):
 
 
 def test_mklink_unicode(opts):
-    filepath = ['สวัสดีครับ.tmp', '🐶 🐺 🦊 🐵 🐸.tmp']
+    filepath = ['สวัสดีครับ.tmp', '🦊🐵🐸.tmp']
     _call_mklink(opts, filepath)

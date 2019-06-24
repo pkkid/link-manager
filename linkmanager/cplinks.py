@@ -1,7 +1,7 @@
 # encoding: utf-8
 import os, shutil
 from linkmanager import log, utils
-_ = utils.short_home
+from linkmanager import rmlink
 
 
 def get_options(parser):
@@ -10,32 +10,32 @@ def get_options(parser):
     return options
 
 
+def create_symlink(syncpath, home, linkroot, dryrun=False):
+    """ Create a symlink for the specified syncpath. """
+    homepath = syncpath.replace(linkroot, home)
+    # If syncpath is a link, resolve the new path
+    if os.path.islink(syncpath):
+        syncpath = os.readlink(syncpath)
+    # Check the homepath file or directory already exists and delete it
+    if os.path.exists(homepath) or os.path.islink(homepath):
+        if os.path.islink(homepath) and os.readlink(homepath) == syncpath:
+            return log.debug(f'Existing link: {homepath}')
+        log.info(f'Deleting: {homepath}')
+        if (os.path.isfile(homepath) or os.path.islink(homepath)) and not dryrun:
+            os.remove(homepath)
+        elif os.path.isdir(homepath) and not dryrun:
+            shutil.rmtree(homepath)
+    # Create the new symlink
+    log.info(f'Syncing: {homepath}')
+    if not dryrun:
+        os.makedirs(os.path.dirname(homepath), exist_ok=True)
+        os.symlink(syncpath, homepath)
+
+
 def run_command(opts):
     """ Symlink synced files and dirs to home directory. """
-    for ftype, filepath in utils.iter_linkroot(opts.linkroot):
-        # Make sure this isn't a deleted file
-        if utils.is_deleted(filepath):
+    for ftype, syncpath in utils.iter_linkroot(opts.linkroot):
+        if utils.is_deleted(syncpath):
+            rmlink.remove_syncpath(syncpath, opts.linkroot, opts.dryrun)
             continue
-        # Get the source and destination paths
-        if os.path.islink(filepath):
-            source = filepath.replace(opts.linkroot, opts.home)
-            filepath = os.readlink(filepath)
-        elif os.path.isfile(filepath):
-            source = filepath.replace(opts.linkroot, opts.home)
-        elif os.path.isdir(filepath):
-            source = filepath.replace(opts.linkroot, opts.home)
-        # Check the source file or directory already exists and delete it
-        if os.path.exists(source) or os.path.islink(source):
-            if os.path.islink(source) and os.readlink(source) == filepath:
-                log.debug(f'Existing {ftype}: {_(source)}')
-                continue
-            log.info(f'Deleting {ftype}: {_(source)}')
-            if (os.path.isfile(source) or os.path.islink(source)) and not opts.dryrun:
-                os.remove(source)
-            elif os.path.isdir(source) and not opts.dryrun:
-                shutil.rmtree(source)
-        # Create the new symlink!
-        log.info(f'Creating {ftype}: {_(source)}')
-        if not opts.dryrun:
-            os.makedirs(os.path.dirname(source), exist_ok=True)
-            os.symlink(filepath, source)
+        create_symlink(syncpath, opts.home, opts.linkroot, opts.dryrun)

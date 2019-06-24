@@ -22,7 +22,6 @@ def touch(filepath):
 
 @pytest.fixture()
 def opts():
-    print("BUILDING OPTS")
     for path in (HOME, LINKROOT):
         shutil.rmtree(path, ignore_errors=True)
         os.makedirs(path, exist_ok=True)

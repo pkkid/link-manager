@@ -1,7 +1,6 @@
 # encoding: utf-8
 import fnmatch, json, os
-from linkmanager import FILE, DIR
-from linkmanager import HOME, CONFIG
+from linkmanager import FILE, DIR, CONFIG
 from linkmanager import LINKROOT, LINKDIR
 from linkmanager import log
 
@@ -98,11 +97,6 @@ def save_config(key, value):
     with open(CONFIG, 'w') as handle:
         json.dump(config, handle)
     return config
-
-
-def short_home(path):
-    """ replace /home/user with ~. """
-    return path.replace(HOME, '~')
 
 
 def value_to_str(value, places=0):
