@@ -6,7 +6,4 @@ syntax: glob
 *__pycache__*
 dist
 build
-pkmeter/conkyrc
-pkmeter/config.json
-pkmeter/config.lua
 *.egg-info

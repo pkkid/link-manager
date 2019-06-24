@@ -1,10 +1,8 @@
 # encoding: utf-8
 import os, shutil
-from linkmanager import HOME
 from linkmanager import LINKROOT, LINKDIR
 from linkmanager import log, utils
 from linkmanager import cplinks
-_ = utils.short_home
 
 
 def get_options(parser):
@@ -16,17 +14,17 @@ def get_options(parser):
 
 def run_command(opts):
     """ Create a new entry in LINKROOT to sync. """
-    paths = utils.validate_paths(opts.paths, opts.linkroot)
+    paths = utils.validate_paths(opts.paths, opts.home, opts.linkroot)
     for path in paths:
-        dest = path.replace(HOME, opts.linkroot)
+        dest = path.replace(opts.home, opts.linkroot)
         if os.path.exists(dest):
-            log.info(f'Link already exists {_(dest)}')
+            log.info(f'Link already exists {dest}')
         elif os.path.isfile(path):
-            log.info(f'Copying File {_(path)} to {_(dest)}')
+            log.info(f'Copying File {path} to {dest}')
             os.makedirs(os.path.dirname(dest), exist_ok=True)
             shutil.copyfile(path, dest)
         elif os.path.isdir(path):
-            log.info(f'Copying Dir {_(path)} to {_(dest)}')
+            log.info(f'Copying Dir {path} to {dest}')
             shutil.copytree(path, dest)
             open(os.path.join(dest, LINKDIR), 'a').close()
     cplinks.run_command(opts)

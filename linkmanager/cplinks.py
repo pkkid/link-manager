@@ -1,6 +1,5 @@
 # encoding: utf-8
 import os, shutil
-from linkmanager import HOME
 from linkmanager import log, utils
 _ = utils.short_home
 
@@ -19,12 +18,12 @@ def run_command(opts):
             continue
         # Get the source and destination paths
         if os.path.islink(filepath):
-            source = filepath.replace(opts.linkroot, HOME)
+            source = filepath.replace(opts.linkroot, opts.home)
             filepath = os.readlink(filepath)
         elif os.path.isfile(filepath):
-            source = filepath.replace(opts.linkroot, HOME)
+            source = filepath.replace(opts.linkroot, opts.home)
         elif os.path.isdir(filepath):
-            source = filepath.replace(opts.linkroot, HOME)
+            source = filepath.replace(opts.linkroot, opts.home)
         # Check the source file or directory already exists and delete it
         if os.path.exists(source) or os.path.islink(source):
             if os.path.islink(source) and os.readlink(source) == filepath:
