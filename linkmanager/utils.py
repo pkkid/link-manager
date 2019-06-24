@@ -6,6 +6,7 @@ from linkmanager import LINKROOT, LINKDIR
 from linkmanager import log
 
 BYTES = ((2**30,'G'), (2**20,'M'), (2**10,'K'), (1,''))
+DELETED = '[DELETED]'
 IGNORES = [
     'LINKROOT',             # LINKROOT flag
     '*_Conflict*',          # Synology conflict file
@@ -44,7 +45,12 @@ def get_fsize(path):
     return total
 
 
-def ignored(filepath):
+def is_deleted(filepath):
+    """ Return True iof the filepath has been deleted. """
+    return filepath.endswith(DELETED)
+
+
+def is_ignored(filepath):
     """ Return true if filepath matches an ignore pattern. """
     filename = os.path.basename(filepath)
     for ignore in IGNORES:
@@ -57,7 +63,7 @@ def iter_linkroot(linkroot):
     """ Iterate all items in linkroot. """
     for filename in sorted(os.listdir(linkroot)):
         filepath = os.path.join(linkroot, filename)
-        if not ignored(filepath):
+        if not is_ignored(filepath):
             if os.path.islink(filepath) or os.path.isfile(filepath):
                 yield FILE, filepath
             elif os.path.exists(os.path.join(filepath, LINKDIR)):
@@ -112,6 +118,7 @@ def value_to_str(value, places=0):
 
 def validate_linkroot(linkroot):
     """ Check the specified linkroot is valid and save it to the config. """
+    linkroot = linkroot.rstrip('/')
     if not linkroot:
         raise SystemExit('You must specify a linkroot directory in order to use these'
             '\ntools. You can configure this setting by running the following command:'

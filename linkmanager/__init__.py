@@ -2,6 +2,7 @@
 import logging, os, sys
 
 FILE, DIR = 'file', 'dir'
+DELETED = '[DELETED]'
 LINKROOT, LINKDIR = 'LINKROOT', 'LINKDIR'
 HOME = os.path.expanduser('~')
 CONFIG = os.path.join(HOME, '.config/linkmanager.json')

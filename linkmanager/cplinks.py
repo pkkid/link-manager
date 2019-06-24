@@ -14,6 +14,9 @@ def get_options(parser):
 def run_command(opts):
     """ Symlink synced files and dirs to home directory. """
     for ftype, filepath in utils.iter_linkroot(opts.linkroot):
+        # Make sure this isn't a deleted file
+        if utils.is_deleted(filepath):
+            continue
         # Get the source and destination paths
         if os.path.islink(filepath):
             source = filepath.replace(opts.linkroot, HOME)
