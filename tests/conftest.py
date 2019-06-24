@@ -13,11 +13,12 @@ def content_ok(filepath):
     return data == os.path.basename(filepath)
 
 
-def touch(filepath):
-    print(f'touching file: {filepath}')
-    os.makedirs(os.path.dirname(filepath), exist_ok=True)
-    with open(filepath, 'w') as handle:
-        handle.write(f'{os.path.basename(filepath)}\n')
+def touch_filepaths(filepaths):
+    for path in filepaths:
+        print(f'touching file: {path}')
+        os.makedirs(os.path.dirname(path), exist_ok=True)
+        with open(path, 'w') as handle:
+            handle.write(f'{os.path.basename(path)}\n')
 
 
 @pytest.fixture()
