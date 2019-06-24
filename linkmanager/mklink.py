@@ -1,9 +1,8 @@
 # encoding: utf-8
 import os, shutil
-from linkmanager import HOME
-from linkmanager import LINKROOT, LINKDIR
+from linkmanager import HOME, LINKROOT, LINKDIR
 from linkmanager import log, utils
-from linkmanager import cplinks
+from linkmanager import cplinks, purge
 _ = utils.short_home
 
 
@@ -15,18 +14,21 @@ def get_options(parser):
 
 
 def run_command(opts):
-    """ Create a new entry in LINKROOT to sync. """
-    paths = utils.validate_paths(opts.paths, opts.linkroot)
-    for path in paths:
-        dest = path.replace(HOME, opts.linkroot)
-        if os.path.exists(dest):
-            log.info(f'Link already exists {_(dest)}')
-        elif os.path.isfile(path):
-            log.info(f'Copying File {_(path)} to {_(dest)}')
-            os.makedirs(os.path.dirname(dest), exist_ok=True)
-            shutil.copyfile(path, dest)
-        elif os.path.isdir(path):
-            log.info(f'Copying Dir {_(path)} to {_(dest)}')
-            shutil.copytree(path, dest)
-            open(os.path.join(dest, LINKDIR), 'a').close()
-    cplinks.run_command(opts)
+    """ Create a new entry in linkroot to sync. """
+    homepaths = utils.validate_paths(opts.paths, opts.linkroot)
+    for homepath in homepaths:
+        syncpath = homepath.replace(HOME, opts.linkroot)
+        if os.path.exists(syncpath):
+            log.info(f'Link already exists {_(syncpath)}')
+        elif os.path.isfile(homepath):
+            log.info(f'Copying file {_(homepath)} to {_(syncpath)}')
+            os.makedirs(os.path.dirname(syncpath), exist_ok=True)
+            shutil.copyfile(homepath, syncpath)
+        elif os.path.isdir(homepath):
+            log.info(f'Copying dir {_(homepath)} to {_(syncpath)}')
+            shutil.copytree(homepath, syncpath)
+            open(os.path.join(syncpath, LINKDIR), 'a').close()
+        # Make sure there is no deleted entry in linkroot and
+        # run cplink against this syncpath
+        purge.purge_syncpath(syncpath)
+        cplinks.create_symlink(syncpath, opts.linkroot, opts.dryrun)

@@ -9,10 +9,10 @@ if projectroot not in sys.path:
     sys.path.append(projectroot)
 
 from linkmanager import setconfig, inventory  # noqa
-from linkmanager import mklink, cplinks, rmlink  # noqa
+from linkmanager import mklink, cplinks, rmlink, purge  # noqa
 from linkmanager import log, utils  # noqa
 
-MODULES = [setconfig, inventory, mklink, cplinks, rmlink]
+MODULES = [setconfig, inventory, mklink, cplinks, rmlink, purge]
 
 
 def _add_global_options(command):
