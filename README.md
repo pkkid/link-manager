@@ -26,13 +26,13 @@ links.py setconfig --linkroot ~/Dropbox/Config
 # can simply run the following command to start syncing it. This command will
 # copy ~/.flake8 to ~/Dropbox/Config/.flake8 then create a symlink from
 # ~/.flake8 -> ~/Dropbox/Config/.flake8.
-links.py mklink ~/.flake8
+mklink ~/.flake8
 
 # To make sure this file is also in sync on the second computer, we can symply
 # run the following command (on the second comuter). This command will iterate
 # all files in ~/Dropbox/Config and setup the corresponding symlink for every
 # file or directory present.
-links.py cplinks
+cplinks
 ```
 
 ## Documentation
