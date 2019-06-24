@@ -18,8 +18,8 @@ MODULES = [setconfig, inventory, mklink, cplinks, rmlink, purge]
 
 def _add_global_options(command):
     """ Global command line options. """
-    command.add_argument('--home', default=HOME, help='link to a directory other than $HOME')
-    command.add_argument('--linkroot', help='specify the linkroot directory')
+    command.add_argument('--home', default=HOME, help='set home to a dir other than $HOME')
+    command.add_argument('--linkroot', help='set the the linkroot directory')
     command.add_argument('--dryrun', action='store_true', default=False, help='dryrun, do not perform any actions')
     command.add_argument('--loglevel', default='INFO', help='sets the python log level')
 
