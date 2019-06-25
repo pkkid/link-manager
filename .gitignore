@@ -3,6 +3,7 @@ syntax: glob
 *.log
 *.pyc
 *.sublime-*
+*.pytest_cache*
 *__pycache__*
 dist
 build
