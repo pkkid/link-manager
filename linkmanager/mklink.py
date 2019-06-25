@@ -17,19 +17,26 @@ def run_command(opts):
     homepaths = utils.validate_paths(opts.paths, opts.home, opts.linkroot)
     for homepath in homepaths:
         syncpath = homepath.replace(opts.home, opts.linkroot)
+        # if syncpath already exists, exit out early
         if os.path.exists(syncpath):
             log.info(f'Link already exists {syncpath}')
             return
+        # symlink: copy symlink to linkroot
         elif os.path.islink(homepath):
             log.info(f'Copying link {homepath} to {syncpath}')
-            os.symlink(os.readlink(homepath), syncpath)
+            if not opts.dryrun:
+                os.symlink(os.readlink(homepath), syncpath)
+        # file: make sure dir exists; copy file to linkroot
         elif os.path.isfile(homepath):
             log.info(f'Copying file {homepath} to {syncpath}')
-            os.makedirs(os.path.dirname(syncpath), exist_ok=True)
-            shutil.copyfile(homepath, syncpath)
+            if not opts.dryrun:
+                os.makedirs(os.path.dirname(syncpath), exist_ok=True)
+                shutil.copyfile(homepath, syncpath)
+        # dir: make sure dir exists; copy tree to linkroot
         elif os.path.isdir(homepath):
             log.info(f'Copying dir {homepath} to {syncpath}')
-            shutil.copytree(homepath, syncpath)
-            open(os.path.join(syncpath, LINKDIR), 'a').close()
+            if not opts.dryrun:
+                shutil.copytree(homepath, syncpath)
+                open(os.path.join(syncpath, LINKDIR), 'a').close()
         # Run cplink against this syncpath
         cplinks.create_symlink(syncpath, opts.home, opts.linkroot, opts.dryrun)

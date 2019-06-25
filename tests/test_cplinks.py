@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 # py.test -rxXs --tb=native --verbose tests; ll /tmp/linkmanager/*/*
-import os, pytest
+import os
 from .conftest import HOME, LINKROOT
 from .conftest import content_ok
 from .conftest import touch_filepaths

@@ -13,19 +13,21 @@ def get_options(parser):
 def create_symlink(syncpath, home, linkroot, dryrun=False):
     """ Create a symlink for the specified syncpath. """
     homepath = syncpath.replace(linkroot, home)
-    # If syncpath is a link, resolve the new path
+    # if syncpath is a link, resolve its destination
     if os.path.islink(syncpath):
         syncpath = os.readlink(syncpath)
-    # Check the homepath file or directory already exists and delete it
+    # check the homepath file or dir already exists and delete it
+    # TODO: we should prompt before deleting anything here
     if os.path.exists(homepath) or os.path.islink(homepath):
         if os.path.islink(homepath) and os.readlink(homepath) == syncpath:
-            return log.debug(f'Existing link: {homepath}')
+            log.debug(f'Existing link: {homepath}')
+            return
         log.info(f'Deleting: {homepath}')
         if (os.path.isfile(homepath) or os.path.islink(homepath)) and not dryrun:
             os.remove(homepath)
         elif os.path.isdir(homepath) and not dryrun:
             shutil.rmtree(homepath)
-    # Create the new symlink
+    # make sure home dirs exiist and create the new symlink
     log.info(f'Syncing: {homepath}')
     if not dryrun:
         os.makedirs(os.path.dirname(homepath), exist_ok=True)
