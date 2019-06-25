@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+# py.test -rxXs --tb=native --verbose tests; ll /tmp/linkmanager/*/*
 import os, pytest
 from .conftest import HOME, LINKROOT
 from .conftest import content_ok
@@ -82,3 +83,20 @@ def test_dir(opts):
         assert os.path.isdir(syncpaths[i]), "Sync file was not created"
     for subfile in subfiles:
         assert content_ok(subfile), "Contents are not accurate"
+
+
+def test_symlink(opts):
+    testfile = os.path.join(HOME, 'testfile.tmp')
+    testlink = os.path.join(HOME, 'testlink.lnk')
+    touch_filepaths([testfile])
+    os.symlink(testfile, testlink)
+    opts.paths = [testlink]
+    mklink.run_command(opts)
+    syncpath = testlink.replace(HOME, LINKROOT)
+    assert os.path.isfile(testfile), "Testfile is not a file"
+    assert os.path.isfile(testlink), "Testlink is not a file"
+    assert os.path.islink(testlink), "Testlink is not a link"
+    assert os.readlink(testlink) == testfile, "Testlink not pointing to correct location"
+    assert os.path.isfile(syncpath), "Syncpath is not a file"
+    assert os.path.islink(syncpath), "Syncpath is not a link"
+    assert os.readlink(syncpath) == testfile, "Syncpath not pointing to correct location"

@@ -20,6 +20,9 @@ def run_command(opts):
         if os.path.exists(syncpath):
             log.info(f'Link already exists {syncpath}')
             return
+        elif os.path.islink(homepath):
+            log.info(f'Copying link {homepath} to {syncpath}')
+            os.symlink(os.readlink(homepath), syncpath)
         elif os.path.isfile(homepath):
             log.info(f'Copying file {homepath} to {syncpath}')
             os.makedirs(os.path.dirname(syncpath), exist_ok=True)
