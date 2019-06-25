@@ -70,8 +70,9 @@ def test_inside_linkroot(opts):
 
 
 def test_dir(opts):
-    subfiles = [os.path.join(HOME, 'mydir/test1.tmp'),
-        os.path.join(HOME, 'mydir/test2.tmp'),]
+    subfiles = [
+        os.path.join(HOME, 'mydir/test1.tmp'),
+        os.path.join(HOME, 'mydir/test2.tmp')]
     opts.paths = [os.path.join(HOME, 'mydir')]
     syncpaths = [p.replace(HOME, LINKROOT) for p in opts.paths]
     touch_filepaths(subfiles)
