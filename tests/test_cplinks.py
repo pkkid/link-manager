@@ -73,3 +73,27 @@ def test_symlink(opts):
     assert os.path.isfile(syncpath), "Syncpath is not a file"
     assert os.path.islink(syncpath), "Syncpath is not a link"
     assert os.readlink(syncpath) == testfile, "Syncpath not pointing to correct location"
+
+
+def test_deleted_file(opts):
+    pass
+
+
+def test_deleted_symlink(opts):
+    pass
+
+
+def test_deleted_dir(opts):
+    pass
+
+
+def test_deleted_notdeleted_file(opts):
+    pass
+
+
+def test_deleted_notdeleted_symlink(opts):
+    pass
+
+
+def test_deleted_notdeleted_dir(opts):
+    pass
