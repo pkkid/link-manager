@@ -1,8 +1,16 @@
 # encoding: utf-8
-import fnmatch, json, os
+import fnmatch, json, os, subprocess
+from shlex import split
 from linkmanager import FILE, DIR, CONFIG
-from linkmanager import LINKROOT, LINKDIR
+from linkmanager import HOME, LINKROOT, LINKDIR
 from linkmanager import log
+
+try:
+    from termcolor import colored, cprint
+except ImportError:
+    colored = lambda msg, color: msg
+    cprint = lambda msg, color: print(msg)
+
 
 BYTES = ((2**30,'G'), (2**20,'M'), (2**10,'K'), (1,''))
 DELETED = '[DELETED]'
@@ -22,13 +30,31 @@ class Bunch(dict):
         return self.__setitem__(item, value)
 
 
+def find_linkroot(maxdepth=3):
+    """ Attempt to find linkroot in the homr directory. """
+    # I suppose I could have written this in Python, but I assume calling find
+    # here is probably a much faster implementation that I would come up with
+    result = subprocess.check_output(split(f'find {HOME} -maxdepth {maxdepth} -name {LINKROOT}'))
+    if result:
+        # import chardet; print(chardet.detect(result))  # noqa
+        # {'encoding': 'ascii', 'confidence': 1.0, 'language': ''}
+        linkroot = os.path.dirname(result.decode('utf8').strip())
+        print('Linkroot is not specified in your configuration.')
+        question = f'Would you like to set it to {colored(linkroot, "cyan")}? [y/n]'
+        response = get_input(None, question, choices=['y','n'])
+        if response == 'y':
+            save_config('linkroot', linkroot)
+            return linkroot
+    return None
+
+
 def get_config():
     """ Read and return all the configuration object. """
     try:
         with open(CONFIG) as handle:
-            return Bunch(json.load(handle))
+            return json.load(handle)
     except FileNotFoundError:
-        return Bunch()
+        return {}
 
 
 def get_fsize(path):
@@ -42,6 +68,16 @@ def get_fsize(path):
         elif entry.is_dir():
             total += get_fsize(entry.path)
     return total
+
+
+def get_input(result, msg, default=None, choices=None):
+    msg = '%s [%s]: ' % (msg, default) if default else '%s: ' % msg
+    while choices and result not in choices:
+        result = input(msg) or default
+    if choices is None or '' not in choices:
+        while not result:
+            result = input(msg) or default
+    return result
 
 
 def is_deleted(filepath):
@@ -112,18 +148,21 @@ def value_to_str(value, places=0):
 
 def validate_linkroot(linkroot):
     """ Check the specified linkroot is valid and save it to the config. """
-    linkroot = linkroot.rstrip('/')
     if not linkroot:
-        raise SystemExit('You must specify a linkroot directory in order to use these'
-            '\ntools. You can configure this setting by running the following command:'
-            '\n> links.py setconfig --linkroot=LINKROOT')
+        linkroot = find_linkroot()
+        if not linkroot:
+            msg = 'You must specify a linkroot directory in order to use these tools.'
+            msg += '\nYou can configure this setting by running the following command:'
+            msg += colored('\n> links.py setconfig linkroot <LINKROOT>', 'cyan')
+            raise SystemExit(msg)
+    linkroot = linkroot.rstrip('/')
     if not os.path.isdir(linkroot):
-        raise SystemExit(f'The specified linkroot does not exist: {linkroot}')
+        raise SystemExit(f'The specified linkroot does not exist: {colored(linkroot, "cyan")}')
     if not os.path.isfile(os.path.join(linkroot, LINKROOT)):
-        raise SystemExit(f'The specified path does not appear to be a valid linkroot: {linkroot}'
-            '\nIf you are sure this is the valid linkroot path, you can specify so by creating a'
-            '\nfile in the directory named LINKROOT. BEWARE: If you specify the wrong path, bad'
-            '\nthings can happen.')
+        msg = f'The specified path does not appear to be a valid linkroot: {colored(linkroot, "cyan")}'
+        msg += '\nIf you are sure this is the valid linkroot path, you can specify so by creating a file in'
+        msg += '\nthe directory named LINKROOT. BEWARE: Bad things can happen if you specify the wrong path.'
+        raise SystemExit(msg)
     return linkroot
 
 
