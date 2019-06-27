@@ -1,6 +1,6 @@
 # encoding: utf-8
 import os, shutil
-from linkmanager import DELETED, HOSTNAME
+from linkmanager import HOSTNAME
 from linkmanager import log, utils
 from linkmanager import rmlink
 
@@ -14,15 +14,13 @@ def get_options(parser):
 def create_symlink(syncpath, home, linkroot, dryrun=False):
     """ Create a symlink for the specified syncpath. """
     # check syncpath is flagged for a specific hostname or deleted
-    syncpath, syncflag = utils.get_syncflag(syncpath)
-    if syncflag is not None and syncflag == DELETED:
-        return rmlink.remove_syncpath(syncpath, linkroot, dryrun)
+    _syncpath, syncflag = utils.get_syncflag(syncpath)
     if syncflag is not None and syncflag != HOSTNAME:
-        return None
+        return rmlink.remove_syncpath(syncpath, linkroot, dryrun)
     # check the homepath file or dir already exists and delete it
     # TODO: we should prompt before deleting anything here
     # WARNING: Do not put homepath before syncpath in the below code!
-    homepath = syncpath.replace(linkroot, home)
+    homepath = _syncpath.replace(linkroot, home)
     syncpath = os.readlink(syncpath) if os.path.islink(syncpath) else syncpath
     if os.path.exists(homepath) or os.path.islink(homepath):
         if os.path.islink(homepath) and os.readlink(homepath) == syncpath:
