@@ -1,10 +1,12 @@
 # encoding: utf-8
-import logging, os, sys
+import logging, os, socket, sys
 
 FILE, DIR = 'file', 'dir'
-DELETED = '[DELETED]'
+DELETED = 'DELETED'
 LINKROOT, LINKDIR = 'LINKROOT', 'LINKDIR'
+
 HOME = os.path.expanduser('~')
+HOSTNAME = socket.gethostname()
 CONFIG = os.path.join(HOME, '.config/linkmanager.json')
 
 log = logging.getLogger('linkmanager')

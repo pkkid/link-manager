@@ -1,5 +1,5 @@
 # encoding: utf-8
-import fnmatch, json, os, subprocess
+import fnmatch, json, os, re, subprocess
 from shlex import split
 from linkmanager import FILE, DIR, CONFIG
 from linkmanager import HOME, LINKROOT, LINKDIR
@@ -13,7 +13,7 @@ except ImportError:
 
 
 BYTES = ((2**30,'G'), (2**20,'M'), (2**10,'K'), (1,''))
-DELETED = '[DELETED]'
+HOSTNAME_REGEX = r'^(.+?)\[([\w\-]+?)\]$'
 IGNORES = [
     'LINKROOT',             # LINKROOT flag
     '*_Conflict*',          # Synology conflict file
@@ -57,6 +57,18 @@ def get_config():
         return {}
 
 
+def get_syncflag(syncpath):
+    """ Return the flag portion of a syncpath file. For example, if the syncpath filename
+        is "hello-world.py[flag]", the return value of this function will be a tuple
+        containing (homepath, syncflag).
+    """
+    matches = re.findall(HOSTNAME_REGEX, syncpath)
+    if len(matches) == 1:
+        syncpath, syncflag = matches[0]
+        return syncpath, syncflag
+    return syncpath, None
+
+
 def get_fsize(path):
     """ Return size of directory or file as an integer. """
     total = 0
@@ -78,11 +90,6 @@ def get_input(result, msg, default=None, choices=None):
         while not result:
             result = input(msg) or default
     return result
-
-
-def is_deleted(filepath):
-    """ Return True iof the filepath has been deleted. """
-    return filepath.endswith(DELETED)
 
 
 def is_ignored(filepath):

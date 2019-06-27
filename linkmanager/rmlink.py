@@ -14,7 +14,7 @@ def get_options(parser):
 def remove_syncpath(syncpath, home, linkroot, dryrun=False):
     """ Cleanup a removed syncpath. Copy original contents back into place. """
     # TODO: Does this work for symlinks?
-    homepath = syncpath.replace(linkroot, home).replace(DELETED, '')
+    homepath = syncpath.replace(linkroot, home).replace(f'[{DELETED}]', '')
     if os.path.islink(homepath) and os.path.isfile(syncpath):
         log.info(f'Unlinking file {homepath}')
         if not dryrun:
@@ -36,4 +36,4 @@ def run_command(opts):
         if not os.path.exists(syncpath):
             log.info(f'Link does not exist {syncpath}')
         remove_syncpath(syncpath, opts.home, opts.linkroot, opts.dryrun)
-        os.rename(syncpath, f'{syncpath}{DELETED}')
+        os.rename(syncpath, f'{syncpath}[{DELETED}]')
