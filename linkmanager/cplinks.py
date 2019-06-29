@@ -16,7 +16,7 @@ def create_symlink(syncpath, home, linkroot, dryrun=False):
     # check syncpath is flagged for a specific hostname or deleted
     _syncpath, syncflag = utils.get_syncflag(syncpath)
     if syncflag is not None and syncflag != HOSTNAME:
-        return rmlink.remove_syncpath(syncpath, linkroot, dryrun)
+        return rmlink.remove_syncpath(syncpath, home, linkroot, dryrun)
     # check the homepath file or dir already exists and delete it
     # TODO: we should prompt before deleting anything here
     # WARNING: Do not put homepath before syncpath in the below code!
@@ -24,7 +24,7 @@ def create_symlink(syncpath, home, linkroot, dryrun=False):
     syncpath = os.readlink(syncpath) if os.path.islink(syncpath) else syncpath
     if os.path.exists(homepath) or os.path.islink(homepath):
         if os.path.islink(homepath) and os.readlink(homepath) == syncpath:
-            log.debug(f'Existing link: {homepath}')
+            log.info(f'Existing link: {homepath}')
             return
         log.debug(f'Deleting: {homepath}')
         if (os.path.isfile(homepath) or os.path.islink(homepath)) and not dryrun:

@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# py.test -rxXs --tb=native --verbose tests; ll /tmp/linkmanager/*/*
+# py.test -rxXs --tb=native --verbose ~/Projects/linkmanager/tests; ll /tmp/linkmanager/*/*
 import os, pytest
 from .conftest import HOME, LINKROOT
 from .conftest import content_ok
