@@ -1,8 +1,9 @@
 # encoding: utf-8
 import os, shutil
 from linkmanager import HOSTNAME
-from linkmanager import log, utils
+from linkmanager import utils
 from linkmanager import rmlink
+cyan = utils.cyan
 
 
 def get_options(parser):
@@ -11,34 +12,53 @@ def get_options(parser):
     return options
 
 
-def create_symlink(syncpath, home, linkroot, dryrun=False):
-    """ Create a symlink for the specified syncpath. """
-    # check syncpath is flagged for a specific hostname or deleted
+def _promt_to_overwrite(homepath, dryrun=False, force=None):
+    """ Remove the specified mfile, dir or link. Prompt the user before deleting
+        anything if the file is not a broken link.
+    """
+    if not utils.exists(homepath):
+        return None
+    if utils.is_broken_link(homepath):
+        return os.remove(homepath)
+    ftype = utils.get_ftype(homepath)
+    if not dryrun and force not in 'yesno':
+        question = f'Would you like overwrite {ftype} {cyan(homepath)}? [y/n]'
+        response = utils.get_input(None, question, choices=['y','n'])
+    if dryrun or force == 'yes' or (force is None and response == 'y'):
+        print(f'Deleting {ftype} {cyan(homepath)}')
+        if (utils.is_file(homepath) or utils.is_link(homepath)) and not dryrun:
+            os.remove(homepath)
+        elif utils.is_dir(homepath) and not dryrun:
+            shutil.rmtree(homepath)
+
+
+def create_symlink(syncpath, home, linkroot, dryrun=False, force=None):
+    """ Create a symlink for the specified syncpath. Rules to creating a symlink..
+        1. If syncflag is set and not equal to pcname, remove the syncpath.
+        2. If homepath is already a link pointing to the correct file, return.
+        3. Prompt to remove the homepath if it exists.
+        4. Create the symlink!
+    """
+    # If syncflag is set and not equal to pcname, remove the syncpath.
     _syncpath, syncflag = utils.get_syncflag(syncpath)
     if syncflag is not None and syncflag != HOSTNAME:
         return rmlink.remove_syncpath(syncpath, home, linkroot, dryrun)
-    # check the homepath file or dir already exists and delete it
-    # TODO: we should prompt before deleting anything here
-    # WARNING: Do not put homepath before syncpath in the below code!
+    # If the homepath exists and is a broken link, delete it.
     homepath = _syncpath.replace(linkroot, home)
     syncpath = os.readlink(syncpath) if os.path.islink(syncpath) else syncpath
-    if os.path.exists(homepath) or os.path.islink(homepath):
-        if os.path.islink(homepath) and os.readlink(homepath) == syncpath:
-            log.info(f'Existing link: {homepath}')
-            return
-        log.debug(f'Deleting: {homepath}')
-        if (os.path.isfile(homepath) or os.path.islink(homepath)) and not dryrun:
-            os.remove(homepath)
-        elif os.path.isdir(homepath) and not dryrun:
-            shutil.rmtree(homepath)
-    # make sure home dirs exiist and create the new symlink
-    log.info(f'Syncing: {homepath} -> {syncpath}')
-    if not dryrun:
-        os.makedirs(os.path.dirname(homepath), exist_ok=True)
-        os.symlink(syncpath, homepath)
+    if utils.linkpath(homepath) == syncpath:
+        return print(f'Syncing already setup for {cyan(homepath)}')
+    # Prompt to remove the homepath if it exists.
+    _promt_to_overwrite(homepath, dryrun, force)
+    # Create the symlink!
+    if not utils.exists(homepath):
+        print(f'Syncing {cyan(homepath)} -> {cyan(syncpath)}')
+        if not dryrun:
+            os.makedirs(os.path.dirname(homepath), exist_ok=True)
+            os.symlink(syncpath, homepath)
 
 
 def run_command(opts):
     """ Symlink synced files and dirs to home directory. """
     for ftype, syncpath in utils.iter_linkroot(opts.linkroot):
-        create_symlink(syncpath, opts.home, opts.linkroot, opts.dryrun)
+        create_symlink(syncpath, opts.home, opts.linkroot, opts.dryrun, opts.force)

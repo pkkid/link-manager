@@ -3,8 +3,9 @@ import os
 from linkmanager import LINKROOT
 from linkmanager import utils
 
-DRYRUN_CHOICES = ['true', 'false']
-LOGLEVEL_CHOICES = ['DEBUG', 'INFO', 'ERROR']
+DRYRUN_CHOICES = [True, False]
+FORCE_CHOICES = ['yes', 'no']
+LOGLEVEL_CHOICES = ['debug', 'info', 'error']
 
 
 def get_options(parser):
@@ -15,22 +16,29 @@ def get_options(parser):
     return options
 
 
+def save_config(name, value, choices=None, cast=None):
+    """ Save the specified value if it matches one of the choices. """
+    value = cast(value) if cast else value
+    if not choices or value in choices:
+        return utils.save_config('name', value)
+    raise SystemExit(f'Error saving {name}: Unknown value {value}')
+
+
+def _bool(value): return True if value.lower() == 'true' else False  # noqa
+def _lower(value): return value.lower()  # noqa
+
+
+def _linkroot(value):
+    linkroot = value.rstrip('/')
+    utils.validate_linkroot(linkroot)
+    open(os.path.join(linkroot, LINKROOT), 'a').close()
+    return linkroot
+
+
 def run_command(opts):
     """ Save a new configuration value. """
-    # dryrun
-    if opts.name.lower() == 'dryrun':
-        dryrun = opts.value.lower()
-        if dryrun in DRYRUN_CHOICES:
-            dryrun = True if opts.value.lower() == 'true' else False
-            utils.save_config('dryrun', dryrun)
-    # linkroot
-    if opts.name.lower() == 'linkroot':
-        linkroot = opts.value.rstrip('/')
-        utils.validate_linkroot(linkroot)
-        open(os.path.join(linkroot, LINKROOT), 'a').close()
-        utils.save_config('linkroot', linkroot)
-    # loglevel
-    if opts.name.lower() == 'loglevel':
-        loglevel = opts.value.upper()
-        if loglevel in LOGLEVEL_CHOICES:
-            utils.save_config('loglevel', loglevel)
+    name, value = opts.name.lower(), opts.value
+    if name == 'dryrun': save_config('dryrun', value, DRYRUN_CHOICES, _bool)
+    if name == 'force': save_config('force', value, FORCE_CHOICES, _lower)
+    if name == 'linkroot': save_config('linkroot', value, None, _linkroot)
+    if name == 'loglevel': save_config('loglevel', value, LOGLEVEL_CHOICES, _lower)

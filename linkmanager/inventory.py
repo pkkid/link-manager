@@ -1,6 +1,6 @@
 # encoding: utf-8
 import os
-from linkmanager import log, utils
+from linkmanager import utils
 
 
 def get_options(parser):
@@ -15,4 +15,4 @@ def run_command(opts):
         ftype = 'link' if os.path.islink(syncpath) else ftype
         fsize = utils.safe_fsize(syncpath)
         syncpath = syncpath.replace(opts.linkroot, opts.home)
-        log.info(f' {ftype:5}  {fsize:6}  {syncpath}')
+        print(f' {ftype:5}  {fsize:6}  {syncpath}')

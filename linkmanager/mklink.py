@@ -1,8 +1,9 @@
 # encoding: utf-8
 import os, shutil
 from linkmanager import LINKROOT, LINKDIR
-from linkmanager import log, utils
+from linkmanager import utils
 from linkmanager import cplinks
+cyan = utils.cyan
 
 
 def get_options(parser):
@@ -17,26 +18,22 @@ def run_command(opts):
     homepaths = utils.validate_paths(opts.paths, opts.home, opts.linkroot)
     for homepath in homepaths:
         syncpath = homepath.replace(opts.home, opts.linkroot)
-        # if syncpath already exists, exit out early
-        if os.path.exists(syncpath):
-            log.info(f'Link already exists {syncpath}')
-            return
-        # symlink: copy symlink to linkroot
-        elif os.path.islink(homepath):
-            log.info(f'Copying link {homepath} to {syncpath}')
-            if not opts.dryrun:
+        # If syncpath already exists, break out early.
+        # TODO: We should prompt to overwrite here.
+        if utils.exists(syncpath):
+            print(f'Destination already exists {syncpath}')
+            continue
+        # Copy homepath to the linkroot
+        ftype = utils.get_ftype(homepath)
+        print(f'Copying {ftype} {cyan(homepath)} to {cyan(syncpath)}')
+        if not opts.dryrun:
+            os.makedirs(os.path.dirname(syncpath), exist_ok=True)
+            if utils.is_link(homepath):
                 os.symlink(os.readlink(homepath), syncpath)
-        # file: make sure dir exists; copy file to linkroot
-        elif os.path.isfile(homepath):
-            log.info(f'Copying file {homepath} to {syncpath}')
-            if not opts.dryrun:
-                os.makedirs(os.path.dirname(syncpath), exist_ok=True)
+            elif utils.is_file(homepath):
                 shutil.copyfile(homepath, syncpath)
-        # dir: make sure dir exists; copy tree to linkroot
-        elif os.path.isdir(homepath):
-            log.info(f'Copying dir {homepath} to {syncpath}')
-            if not opts.dryrun:
+            elif utils.is_dir(homepath):
                 shutil.copytree(homepath, syncpath)
                 open(os.path.join(syncpath, LINKDIR), 'a').close()
-        # Run cplink against this syncpath
-        cplinks.create_symlink(syncpath, opts.home, opts.linkroot, opts.dryrun)
+        # Create the symlink
+        cplinks.create_symlink(syncpath, opts.home, opts.linkroot, opts.dryrun, force='yes')

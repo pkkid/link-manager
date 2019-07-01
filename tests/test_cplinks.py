@@ -1,99 +1,121 @@
 # -*- coding: utf-8 -*-
-# py.test -rxXs --tb=native --verbose tests; ll /tmp/linkmanager/*/*
-import os
-from .conftest import HOME, LINKROOT
-from .conftest import content_ok
-from .conftest import touch_filepaths
-from linkmanager import LINKDIR
+# py.test -rxXs --tb=native --verbose ~/Projects/link-manager/tests/test_cplinks.py
+from .conftest import HOME, SYNC, File, Link
+from .conftest import create, check
+from .conftest import clear_contents, list_contents
+from linkmanager import DELETED, LINKDIR
 from linkmanager import cplinks
+
+setup_function = clear_contents
+teardown_function = list_contents
 
 
 def test_file(opts):
-    syncpaths = [os.path.join(LINKROOT, 'test1.tmp')]
-    homepaths = [p.replace(LINKROOT, HOME) for p in syncpaths]
-    touch_filepaths(syncpaths)
+    """ Basic filepaths should just work. """
+    create([
+        File(f'{SYNC}/test1.tmp'),  # File at root
+        File(f'{SYNC}/subdir/test2.tmp'),  # File in subdir
+        File(f'{SYNC}/สวัสดีครับ - 🦊🐵🐸.tmp'),  # Unicode
+    ])
     cplinks.run_command(opts)
-    for i in range(len(homepaths)):
-        assert os.path.isfile(homepaths[i]), "Path is a file"
-        assert os.path.islink(homepaths[i]), "Symlink was not created"
-        assert content_ok(homepaths[i]), "Contents are not accurate"
-
-
-def test_subfile(opts):
-    syncpaths = [os.path.join(LINKROOT, 'subdirA/test1.tmp')]
-    homepaths = [p.replace(LINKROOT, HOME) for p in syncpaths]
-    touch_filepaths(syncpaths)
-    cplinks.run_command(opts)
-    for i in range(len(homepaths)):
-        assert os.path.isfile(homepaths[i]), "Path is a file"
-        assert os.path.islink(homepaths[i]), "Symlink was not created"
-        assert content_ok(homepaths[i]), "Contents are not accurate"
-
-
-def test_unicode_file(opts):
-    syncpaths = [os.path.join(LINKROOT, 'สวัสดีครับ - 🦊🐵🐸.tmp')]
-    homepaths = [p.replace(LINKROOT, HOME) for p in syncpaths]
-    touch_filepaths(syncpaths)
-    cplinks.run_command(opts)
-    for i in range(len(homepaths)):
-        assert os.path.isfile(homepaths[i]), "Path is a file"
-        assert os.path.islink(homepaths[i]), "Symlink was not created"
-        assert content_ok(homepaths[i]), "Contents are not accurate"
+    check([
+        Link(f'{HOME}/test1.tmp', to=f'{SYNC}/test1.tmp'),
+        Link(f'{HOME}/subdir/test2.tmp', to=f'{SYNC}/subdir/test2.tmp'),
+        Link(f'{HOME}/สวัสดีครับ - 🦊🐵🐸.tmp', to=f'{SYNC}/สวัสดีครับ - 🦊🐵🐸.tmp'),
+        File(f'{SYNC}/test1.tmp', data='test1.tmp'),
+        File(f'{SYNC}/subdir/test2.tmp', data='test2.tmp'),
+        File(f'{SYNC}/สวัสดีครับ - 🦊🐵🐸.tmp', data='สวัสดีครับ - 🦊🐵🐸.tmp'),
+    ])
 
 
 def test_dir(opts):
-    linkdir = os.path.join(LINKROOT, 'mydir')
-    syncpaths = [
-        os.path.join(linkdir, 'test1.tmp'),
-        os.path.join(linkdir, 'test2.tmp'),
-        os.path.join(linkdir, LINKDIR)]
-    homedir = linkdir.replace(LINKROOT, HOME)
-    homepaths = [p.replace(LINKROOT, HOME) for p in syncpaths][:-1]
-    touch_filepaths(syncpaths)
+    """ Test linking a dirtectory. """
+    create([
+        File(f'{SYNC}/mydir/test1.tmp'),
+        File(f'{SYNC}/mydir/test2.tmp'),
+        File(f'{SYNC}/mydir/{LINKDIR}', data=''),
+    ])
     cplinks.run_command(opts)
-    for i in range(len(homepaths)):
-        assert os.path.isfile(homepaths[i]), "Path is not a file"
-        assert not os.path.islink(homepaths[i]), "Subfile is a link!"
-        assert content_ok(homepaths[i]), "Contents are not accurate"
-    assert os.path.isdir(homedir), "Homedir is not a dir"
-    assert os.path.islink(homedir), "Homedir is not a link"
+    check([
+        Link(f'{HOME}/mydir', to=f'{SYNC}/mydir'),
+        File(f'{SYNC}/mydir/test1.tmp', data='test1.tmp'),
+        File(f'{SYNC}/mydir/test2.tmp', data='test2.tmp'),
+        File(f'{SYNC}/mydir/{LINKDIR}', data=''),
+    ])
 
 
 def test_symlink(opts):
-    testfile = os.path.join(HOME, 'testfile.tmp')
-    syncpath = os.path.join(LINKROOT, 'testlink.lnk')
-    testlink = syncpath.replace(LINKROOT, HOME)
-    touch_filepaths([testfile])
-    os.symlink(testfile, syncpath)
+    """ Symlink should be a copy of the file. """
+    create([
+        File(f'{HOME}/testfile.tmp'),
+        Link(f'{SYNC}/testlink.lnk', to=f'{HOME}/testfile.tmp'),
+    ])
     cplinks.run_command(opts)
-    assert os.path.isfile(testfile), "Testfile is not a file"
-    assert os.path.isfile(testlink), "Testlink is not a file"
-    assert os.path.islink(testlink), "Testlink is not a link"
-    assert os.readlink(testlink) == testfile, "Testlink not pointing to correct location"
-    assert os.path.isfile(syncpath), "Syncpath is not a file"
-    assert os.path.islink(syncpath), "Syncpath is not a link"
-    assert os.readlink(syncpath) == testfile, "Syncpath not pointing to correct location"
+    check([
+        File(f'{HOME}/testfile.tmp', data='testfile.tmp'),
+        Link(f'{HOME}/testlink.lnk', to=f'{HOME}/testfile.tmp'),
+        Link(f'{SYNC}/testlink.lnk', to=f'{HOME}/testfile.tmp'),
+    ])
 
 
-def test_deleted_file(opts):
-    pass
+def test_deleted(opts):
+    """ Deleted file should replace linked file. """
+    create([
+        Link(f'{HOME}/testfile.tmp', to=f'{SYNC}/testfile.tmp'),
+        File(f'{SYNC}/testfile.tmp[{DELETED}]', data='deleted'),
+    ])
+    cplinks.run_command(opts)
+    check([
+        File(f'{HOME}/testfile.tmp', data='deleted'),
+        File(f'{SYNC}/testfile.tmp[{DELETED}]', data='deleted'),
+    ])
+
+
+def test_sync_disabled(opts):
+    """ File shuold remain untouched as its was never being synced. """
+    create([
+        File(f'{HOME}/testfile.tmp'),
+        File(f'{SYNC}/testfile.tmp[{DELETED}]', data='deleted'),
+    ])
+    cplinks.run_command(opts)
+    check([
+        File(f'{HOME}/testfile.tmp', data='testfile.tmp'),
+        File(f'{SYNC}/testfile.tmp[{DELETED}]', data='deleted'),
+    ])
 
 
 def test_deleted_symlink(opts):
-    pass
+    """ Deleted symlink should replace broken symlink. """
+    create([
+        Link(f'{HOME}/testfile.tmp', to=f'{SYNC}/testfile.tmp'),
+        Link(f'{SYNC}/testfile.tmp[{DELETED}]', to=f'{SYNC}/somefile.tmp'),
+    ])
+    cplinks.run_command(opts)
+    check([
+        Link(f'{HOME}/testfile.tmp', to=f'{SYNC}/somefile.tmp'),
+        Link(f'{SYNC}/testfile.tmp[{DELETED}]', to=f'{SYNC}/somefile.tmp'),
+    ])
 
 
-def test_deleted_dir(opts):
-    pass
+# def test_deleted_dir(opts):
+#     pass
 
 
-def test_deleted_notdeleted_file(opts):
-    pass
+# def test_deleted_notdeleted_file(opts):
+#     pass
 
 
-def test_deleted_notdeleted_symlink(opts):
-    pass
+# def test_deleted_notdeleted_symlink(opts):
+#     pass
 
 
-def test_deleted_notdeleted_dir(opts):
-    pass
+# def test_deleted_notdeleted_dir(opts):
+#     pass
+
+
+# def test_hostname(opts):
+#     pass
+
+
+# def test_deleted_hostname(opts):
+#     pass

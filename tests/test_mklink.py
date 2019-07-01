@@ -1,103 +1,86 @@
 # -*- coding: utf-8 -*-
-# py.test -rxXs --tb=native --verbose ~/Projects/linkmanager/tests; ll /tmp/linkmanager/*/*
+# py.test -rxXs --tb=native --verbose ~/Projects/link-manager/tests/test_mklink.py
 import os, pytest
-from .conftest import HOME, LINKROOT
-from .conftest import content_ok
-from .conftest import touch_filepaths
+from .conftest import HOME, SYNC, File, Link
+from .conftest import create, check
+from .conftest import clear_contents, list_contents
 from linkmanager import LINKDIR
 from linkmanager import mklink
 
+setup_function = clear_contents
+teardown_function = list_contents
 
-def test_file(opts):
-    opts.paths = [os.path.join(HOME, 'test1.tmp')]
-    syncpaths = [p.replace(HOME, LINKROOT) for p in opts.paths]
-    touch_filepaths(opts.paths)
+
+def test_basic_files(opts):
+    """ Basic filepaths should just work. """
+    opts.paths = create([
+        File(f'{HOME}/test1.tmp'),  # File at root
+        File(f'{HOME}/subdir/test2.tmp'),  # File in subdir
+        File(f'{HOME}/สวัสดีครับ - 🦊🐵🐸.tmp'),  # Unicode
+    ])
     mklink.run_command(opts)
-    for i in range(len(opts.paths)):
-        assert os.path.isfile(opts.paths[i]), "Path is a file"
-        assert os.path.islink(opts.paths[i]), "Symlink was not created"
-        assert os.path.isfile(syncpaths[i]), "Sync file was not created"
-        assert content_ok(opts.paths[i]), "Contents are not accurate"
-
-
-def test_subfile(opts):
-    opts.paths = [os.path.join(HOME, 'subdirA/test1.tmp')]
-    syncpaths = [p.replace(HOME, LINKROOT) for p in opts.paths]
-    touch_filepaths(opts.paths)
-    mklink.run_command(opts)
-    for i in range(len(opts.paths)):
-        assert os.path.isfile(opts.paths[i]), "Path is a file"
-        assert os.path.islink(opts.paths[i]), "Symlink was not created"
-        assert os.path.isfile(syncpaths[i]), "Sync file was not created"
-        assert content_ok(opts.paths[i]), "Contents are not accurate"
-
-
-def test_unicode_file(opts):
-    opts.paths = [os.path.join(HOME, 'สวัสดีครับ - 🦊🐵🐸.tmp')]
-    syncpaths = [p.replace(HOME, LINKROOT) for p in opts.paths]
-    touch_filepaths(opts.paths)
-    mklink.run_command(opts)
-    for i in range(len(opts.paths)):
-        assert os.path.isfile(opts.paths[i]), "Path is a file"
-        assert os.path.islink(opts.paths[i]), "Symlink was not created"
-        assert os.path.isfile(syncpaths[i]), "Sync file was not created"
-        assert content_ok(opts.paths[i]), "Contents are not accurate"
+    check([
+        Link(f'{HOME}/test1.tmp', to=f'{SYNC}/test1.tmp'),
+        Link(f'{HOME}/subdir/test2.tmp', to=f'{SYNC}/subdir/test2.tmp'),
+        Link(f'{HOME}/สวัสดีครับ - 🦊🐵🐸.tmp', to=f'{SYNC}/สวัสดีครับ - 🦊🐵🐸.tmp'),
+        File(f'{SYNC}/test1.tmp', data='test1.tmp'),
+        File(f'{SYNC}/subdir/test2.tmp', data='test2.tmp'),
+        File(f'{SYNC}/สวัสดีครับ - 🦊🐵🐸.tmp', data='สวัสดีครับ - 🦊🐵🐸.tmp'),
+    ])
 
 
 def test_already_exists(opts):
-    opts.paths = [os.path.join(HOME, 'existing.tmp')]
-    syncpaths = [p.replace(HOME, LINKROOT) for p in opts.paths]
-    touch_filepaths(opts.paths)
-    touch_filepaths(syncpaths)
+    """ mklink with an existing file in syncdir should fail. """
+    paths = create([
+        File(f'{HOME}/existing1.tmp'),
+        File(f'{SYNC}/existing1.tmp'),
+    ])
+    opts.paths = [p for p in paths if p.startswith(HOME)]
     mklink.run_command(opts)
-    for i in range(len(opts.paths)):
-        assert os.path.isfile(opts.paths[i]), "Path is a file"
-        assert not os.path.islink(opts.paths[i]), "Path is a link!"
-        assert os.path.isfile(syncpaths[i]), "Sync file was not created"
+    check([
+        File(f'{HOME}/existing1.tmp', data='existing1.tmp'),
+        File(f'{SYNC}/existing1.tmp', data='existing1.tmp'),
+    ])
 
 
 def test_outside_home(opts):
+    """ Test file outside home directory should fail. """
     parent = os.path.dirname(HOME)
-    opts.paths = [os.path.join(parent, '/tmp/outside.tmp')]
+    opts.paths = create([File(f'{parent}/outside.tmp')])
     with pytest.raises(SystemExit):
         mklink.run_command(opts)
 
 
 def test_inside_linkroot(opts):
-    opts.paths = [os.path.join(LINKROOT, 'foo/outside.tmp')]
+    """ Test file inside sync dir should fail. """
+    opts.paths = create([File(f'{SYNC}/inside.tmp')])
     with pytest.raises(SystemExit):
         mklink.run_command(opts)
 
 
 def test_dir(opts):
-    subfiles = [
-        os.path.join(HOME, 'mydir/test1.tmp'),
-        os.path.join(HOME, 'mydir/test2.tmp')]
-    opts.paths = [os.path.join(HOME, 'mydir')]
-    syncpaths = [p.replace(HOME, LINKROOT) for p in opts.paths]
-    touch_filepaths(subfiles)
+    """ Test syncing a directory. """
+    create([
+        File(f'{HOME}/mydir/test1.tmp'),
+        File(f'{HOME}/mydir/test2.tmp')])
+    opts.paths = [f'{HOME}/mydir']
     mklink.run_command(opts)
-    for i in range(len(opts.paths)):
-        assert os.path.isfile(os.path.join(opts.paths[i], LINKDIR)), "LINKDIR does not exist"
-        assert os.path.isdir(opts.paths[i]), "Path is a dir"
-        assert os.path.islink(opts.paths[i]), "Symlink was not created"
-        assert os.path.isdir(syncpaths[i]), "Sync file was not created"
-    for subfile in subfiles:
-        assert content_ok(subfile), "Contents are not accurate"
+    check([
+        Link(f'{HOME}/mydir', to=f'{SYNC}/mydir'),
+        File(f'{SYNC}/mydir/{LINKDIR}', data=''),
+        File(f'{SYNC}/mydir/test1.tmp', data='test1.tmp'),
+        File(f'{SYNC}/mydir/test2.tmp', data='test2.tmp'),
+    ])
 
 
 def test_symlink(opts):
-    testfile = os.path.join(HOME, 'testfile.tmp')
-    testlink = os.path.join(HOME, 'testlink.lnk')
-    touch_filepaths([testfile])
-    os.symlink(testfile, testlink)
-    opts.paths = [testlink]
+    create([
+        File(f'{HOME}/mydir/testfile.tmp'),
+        Link(f'{HOME}/mydir/testlink.lnk', to=f'{HOME}/mydir/testfile.tmp')])
+    opts.paths = [f'{HOME}/mydir/testlink.lnk']
     mklink.run_command(opts)
-    syncpath = testlink.replace(HOME, LINKROOT)
-    assert os.path.isfile(testfile), "Testfile is not a file"
-    assert os.path.isfile(testlink), "Testlink is not a file"
-    assert os.path.islink(testlink), "Testlink is not a link"
-    assert os.readlink(testlink) == testfile, "Testlink not pointing to correct location"
-    assert os.path.isfile(syncpath), "Syncpath is not a file"
-    assert os.path.islink(syncpath), "Syncpath is not a link"
-    assert os.readlink(syncpath) == testfile, "Syncpath not pointing to correct location"
+    check([
+        File(f'{HOME}/mydir/testfile.tmp', data='testfile.tmp'),
+        Link(f'{HOME}/mydir/testlink.lnk', to=f'{HOME}/mydir/testfile.tmp'),
+        Link(f'{SYNC}/mydir/testlink.lnk', to=f'{HOME}/mydir/testfile.tmp'),
+    ])

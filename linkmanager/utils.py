@@ -1,9 +1,9 @@
 # encoding: utf-8
-import fnmatch, json, os, re, subprocess
+import fnmatch, json, os
+import re, subprocess
 from shlex import split
-from linkmanager import FILE, DIR, CONFIG
+from linkmanager import FILE, DIR, LINK, CONFIG
 from linkmanager import HOME, LINKROOT, LINKDIR
-from linkmanager import log
 
 try:
     from termcolor import colored, cprint
@@ -11,7 +11,7 @@ except ImportError:
     colored = lambda msg, color: msg
     cprint = lambda msg, color: print(msg)
 
-
+cyan = lambda msg: colored(msg, 'cyan')
 BYTES = ((2**30,'G'), (2**20,'M'), (2**10,'K'), (1,''))
 HOSTNAME_REGEX = r'^(.+?)\[([\w\-]+?)\]$'
 IGNORES = [
@@ -30,17 +30,20 @@ class Bunch(dict):
         return self.__setitem__(item, value)
 
 
+def exists(path):
+    """ Return true if the path exists as a file, dir, link, or broken link. """
+    return os.path.exists(path) or os.path.islink(path)
+
+
 def find_linkroot(maxdepth=3):
     """ Attempt to find linkroot in the homr directory. """
     # I suppose I could have written this in Python, but I assume calling find
     # here is probably a much faster implementation that I would come up with
     result = subprocess.check_output(split(f'find {HOME} -maxdepth {maxdepth} -name {LINKROOT}'))
     if result:
-        # import chardet; print(chardet.detect(result))  # noqa
-        # {'encoding': 'ascii', 'confidence': 1.0, 'language': ''}
         linkroot = os.path.dirname(result.decode('utf8').strip())
         print('Linkroot is not specified in your configuration.')
-        question = f'Would you like to set it to {colored(linkroot, "cyan")}? [y/n]'
+        question = f'Would you like to set it to {cyan(linkroot)}? [y/n]'
         response = get_input(None, question, choices=['y','n'])
         if response == 'y':
             save_config('linkroot', linkroot)
@@ -82,6 +85,13 @@ def get_fsize(path):
     return total
 
 
+def get_ftype(path):
+    """ Return file, dir, or link. """
+    if is_link(path): return LINK
+    if is_file(path): return FILE
+    if is_dir(path): return DIR
+
+
 def get_input(result, msg, default=None, choices=None):
     msg = '%s [%s]: ' % (msg, default) if default else '%s: ' % msg
     while choices and result not in choices:
@@ -92,11 +102,44 @@ def get_input(result, msg, default=None, choices=None):
     return result
 
 
+def is_broken_link(path):
+    """ Return true if path is a link and the path is broken. """
+    if is_link(path):
+        linkpath = os.readlink(path)
+        if not os.path.exists(linkpath):
+            return True
+    return False
+
+
+def is_dir(path):
+    """ Return true if dir is a file and not a link. """
+    return os.path.isdir(path) and not os.path.islink(path)
+
+
+def is_file(path):
+    """ Return true if path is a file and not a link. """
+    return os.path.isfile(path) and not os.path.islink(path)
+
+
+def is_link(path):
+    """ Return true if the path is a link. """
+    return os.path.islink(path)
+
+
 def is_ignored(filepath):
     """ Return true if filepath matches an ignore pattern. """
     filename = os.path.basename(filepath)
     for ignore in IGNORES:
         if fnmatch.fnmatch(filename, ignore):
+            return True
+    return False
+
+
+def is_working_link(filepath):
+    """ Return true if the filepath is a link and not broken. """
+    if os.path.islink(filepath):
+        linkpath = os.readlink(filepath)
+        if os.path.exists(linkpath):
             return True
     return False
 
@@ -113,6 +156,13 @@ def iter_linkroot(linkroot):
             elif os.path.isdir(filepath):
                 for item in iter_linkroot(filepath):
                     yield item
+
+
+def linkpath(filepath):
+    """ Return the linkpath of the specified link. """
+    if os.path.islink(filepath):
+        return os.readlink(filepath)
+    return None
 
 
 def safe_fsize(path):
@@ -134,7 +184,7 @@ def safe_unlink(path):
 
 def save_config(key, value):
     """ Save a new configuration option. """
-    log.info(f'Saving configuration value {key}={value} to {CONFIG}')
+    print(f'Saving configuration value {key}={value} to {CONFIG}')
     config = get_config()
     config.update({key:value})
     with open(CONFIG, 'w') as handle:
@@ -160,13 +210,13 @@ def validate_linkroot(linkroot):
         if not linkroot:
             msg = 'You must specify a linkroot directory in order to use these tools.'
             msg += '\nYou can configure this setting by running the following command:'
-            msg += colored('\n> links.py setconfig linkroot <LINKROOT>', 'cyan')
+            msg += cyan('\n> links.py setconfig linkroot <LINKROOT>')
             raise SystemExit(msg)
     linkroot = linkroot.rstrip('/')
     if not os.path.isdir(linkroot):
-        raise SystemExit(f'The specified linkroot does not exist: {colored(linkroot, "cyan")}')
+        raise SystemExit(f'The specified linkroot does not exist: {cyan(linkroot)}')
     if not os.path.isfile(os.path.join(linkroot, LINKROOT)):
-        msg = f'The specified path does not appear to be a valid linkroot: {colored(linkroot, "cyan")}'
+        msg = f'The specified path does not appear to be a valid linkroot: {cyan(linkroot)}'
         msg += '\nIf you are sure this is the valid linkroot path, you can specify so by creating a file in'
         msg += '\nthe directory named LINKROOT. BEWARE: Bad things can happen if you specify the wrong path.'
         raise SystemExit(msg)
@@ -174,11 +224,11 @@ def validate_linkroot(linkroot):
 
 
 def validate_paths(paths, home, linkroot):
-    """ Validate the specified path is appropriate. """
+    """ Validate the specified paths are appropriate. """
     paths = [os.path.abspath(path) for path in paths]
     for path in paths:
-        if not os.path.exists(path):
-            raise SystemExit(f'The specified path does not exist: {path}')
+        if not exists(path):
+            raise SystemExit(f'The specified path does not exist: {cyan(path)}')
         if not path.startswith(home):
             raise SystemExit(f'Specified path must exist in your home directory.')
         if path.startswith(linkroot):
