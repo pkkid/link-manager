@@ -1,7 +1,7 @@
 # encoding: utf-8
 import os, shutil
 from linkmanager import DELETED, LINKROOT, LINKDIR
-from linkmanager import utils
+from linkmanager import log, utils
 cyan = utils.cyan
 
 
@@ -23,19 +23,19 @@ def remove_syncpath(syncpath, home, linkroot, dryrun=False, force=None):
     homepath = _syncpath.replace(linkroot, home)
     # Make sure homepath is a symlink pointing to syncpath.
     if utils.linkpath(homepath) != _syncpath:
-        print(f'Syncing not enabled for {cyan(homepath)}')
+        log.info(f'Syncing not enabled for {cyan(homepath)}')
         return
     # Make sure homepath is pointing to a non-existing file.
     if utils.exists(utils.linkpath(homepath)):
-        print(f'Syncing appears valid for {cyan(homepath)}')
+        log.info(f'Syncing appears valid for {cyan(homepath)}')
         return
     # Make sure syncpath exists
     if not utils.exists(syncpath):
-        print(f'Sync path does not exist {cyan(syncpath)}')
+        log.info(f'Sync path does not exist {cyan(syncpath)}')
         return
     # Delete homepath & copy syncpath to its location!
     ftype = utils.get_ftype(syncpath)
-    print(f'Removing sync for {ftype} {cyan(homepath)}')
+    log.info(f'Removing sync for {ftype} {cyan(homepath)}')
     if not dryrun:
         if utils.is_link(syncpath):
             utils.safe_unlink(homepath)

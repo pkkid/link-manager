@@ -1,8 +1,7 @@
 # encoding: utf-8
 import os, shutil
 from linkmanager import LINKROOT, LINKDIR
-from linkmanager import utils
-from linkmanager import cplinks
+from linkmanager import log, utils, cplinks
 cyan = utils.cyan
 
 
@@ -21,11 +20,10 @@ def run_command(opts):
         # If syncpath already exists, break out early.
         # TODO: We should prompt to overwrite here.
         if utils.exists(syncpath):
-            print(f'Destination already exists {syncpath}')
-            continue
+            log.debug(f'Destination already exists {syncpath}')
         # Copy homepath to the linkroot
         ftype = utils.get_ftype(homepath)
-        print(f'Copying {ftype} {cyan(homepath)} to {cyan(syncpath)}')
+        log.info(f'Copying {ftype} {cyan(homepath)} to {cyan(syncpath)}')
         if not opts.dryrun:
             os.makedirs(os.path.dirname(syncpath), exist_ok=True)
             if utils.is_link(homepath):

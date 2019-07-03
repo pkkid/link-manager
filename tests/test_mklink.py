@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# py.test -rxXs --tb=native --verbose ~/Projects/link-manager/tests/test_mklink.py
+# py.test -rxXs --tb=native --verbose --log-cli-level=INFO ~/Projects/link-manager/tests/test_mklink.py
 import os, pytest
 from .conftest import HOME, SYNC, File, Link
 from .conftest import create, check
@@ -38,7 +38,7 @@ def test_already_exists(opts):
     opts.paths = [p for p in paths if p.startswith(HOME)]
     mklink.run_command(opts)
     check([
-        File(f'{HOME}/existing1.tmp', data='existing1.tmp'),
+        Link(f'{HOME}/existing1.tmp', to=f'{SYNC}/existing1.tmp'),
         File(f'{SYNC}/existing1.tmp', data='existing1.tmp'),
     ])
 

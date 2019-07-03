@@ -1,8 +1,7 @@
 # encoding: utf-8
 import os, shutil
 from linkmanager import HOSTNAME
-from linkmanager import utils
-from linkmanager import rmlink
+from linkmanager import log, utils, rmlink
 cyan = utils.cyan
 
 
@@ -25,7 +24,7 @@ def _promt_to_overwrite(homepath, dryrun=False, force=None):
         question = f'Would you like overwrite {ftype} {cyan(homepath)}? [y/n]'
         response = utils.get_input(None, question, choices=['y','n'])
     if dryrun or force == 'yes' or (force is None and response == 'y'):
-        print(f'Deleting {ftype} {cyan(homepath)}')
+        log.info(f'Deleting {ftype} {cyan(homepath)}')
         if (utils.is_file(homepath) or utils.is_link(homepath)) and not dryrun:
             os.remove(homepath)
         elif utils.is_dir(homepath) and not dryrun:
@@ -47,12 +46,13 @@ def create_symlink(syncpath, home, linkroot, dryrun=False, force=None):
     homepath = _syncpath.replace(linkroot, home)
     syncpath = os.readlink(syncpath) if os.path.islink(syncpath) else syncpath
     if utils.linkpath(homepath) == syncpath:
-        return print(f'Syncing already setup for {cyan(homepath)}')
+        log.debug(f'Syncing already setup for {cyan(homepath)}')
+        return
     # Prompt to remove the homepath if it exists.
     _promt_to_overwrite(homepath, dryrun, force)
     # Create the symlink!
     if not utils.exists(homepath):
-        print(f'Syncing {cyan(homepath)} -> {cyan(syncpath)}')
+        log.info(f'Syncing {cyan(homepath)} -> {cyan(syncpath)}')
         if not dryrun:
             os.makedirs(os.path.dirname(homepath), exist_ok=True)
             os.symlink(syncpath, homepath)

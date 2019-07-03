@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# py.test -rxXs --tb=native --verbose ~/Projects/link-manager/tests/test_cplinks.py
+# py.test -rxXs --tb=native --verbose --log-cli-level=INFO ~/Projects/link-manager/tests/test_cplinks.py
 from .conftest import HOME, SYNC, File, Link
 from .conftest import create, check
 from .conftest import clear_contents, list_contents

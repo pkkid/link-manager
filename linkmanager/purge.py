@@ -1,7 +1,7 @@
 # encoding: utf-8
 import os
 from linkmanager import DELETED
-from linkmanager import utils
+from linkmanager import log, utils
 
 
 def get_options(parser):
@@ -15,7 +15,7 @@ def purge_syncpath(syncpath, dryrun=False):
     if not utils.is_deleted(syncpath):
         syncpath = f'{syncpath}{DELETED}'
     if os.path.exists(syncpath):
-        print(f'Purging {syncpath}')
+        log.info(f'Purging {syncpath}')
         if not dryrun:
             utils.safe_unlink(syncpath)
 
