@@ -1,5 +1,8 @@
 # encoding: utf-8
-import logging, os, socket, sys
+import logging
+import os
+import socket
+import sys
 
 FILE, DIR, LINK = 'file', 'dir', 'link'
 DELETED = 'DELETED'
