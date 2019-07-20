@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 # py.test -rxXs --tb=native --verbose --log-cli-level=INFO ~/Projects/link-manager/tests/test_mklink.py
-import os, pytest
+import os
+import pytest
 from .conftest import HOME, SYNC, File, Link
 from .conftest import create, check
 from .conftest import clear_contents, list_contents

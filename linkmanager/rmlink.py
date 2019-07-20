@@ -1,5 +1,6 @@
 # encoding: utf-8
-import os, shutil
+import os
+import shutil
 from linkmanager import DELETED, LINKROOT, LINKDIR
 from linkmanager import log, utils
 cyan = utils.cyan

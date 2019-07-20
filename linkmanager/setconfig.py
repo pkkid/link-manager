@@ -38,7 +38,11 @@ def _linkroot(value):
 def run_command(opts):
     """ Save a new configuration value. """
     name, value = opts.name.lower(), opts.value
-    if name == 'dryrun': save_config('dryrun', value, DRYRUN_CHOICES, _bool)
-    if name == 'force': save_config('force', value, FORCE_CHOICES, _lower)
-    if name == 'linkroot': save_config('linkroot', value, None, _linkroot)
-    if name == 'loglevel': save_config('loglevel', value, LOGLEVEL_CHOICES, _lower)
+    if name == 'dryrun':
+        save_config('dryrun', value, DRYRUN_CHOICES, _bool)
+    if name == 'force':
+        save_config('force', value, FORCE_CHOICES, _lower)
+    if name == 'linkroot':
+        save_config('linkroot', value, None, _linkroot)
+    if name == 'loglevel':
+        save_config('loglevel', value, LOGLEVEL_CHOICES, _lower)

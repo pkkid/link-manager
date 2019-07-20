@@ -23,7 +23,7 @@ def _promt_to_overwrite(homepath, dryrun=False, force=None):
     ftype = utils.get_ftype(homepath)
     if not dryrun and force not in ['yes', 'no']:
         question = f'Would you like overwrite {ftype} {cyan(homepath)}? [y/n]'
-        response = utils.get_input(None, question, choices=['y','n'])
+        response = utils.get_input(None, question, choices=['y', 'n'])
     if dryrun or force == 'yes' or (force is None and response == 'y'):
         log.info(f'Deleting {ftype} {cyan(homepath)}')
         if (utils.is_file(homepath) or utils.is_link(homepath)) and not dryrun:

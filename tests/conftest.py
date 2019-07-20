@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
-import os, pytest, shutil
+import os
+import pytest
+import shutil
 from linkmanager import utils
 from collections import namedtuple
 
@@ -35,19 +37,21 @@ def clear_contents():
     rootdir = os.path.dirname(HOME)
     for path in os.listdir(rootdir):
         filepath = os.path.join(rootdir, path)
-        if IGNORE in filepath: continue
+        if IGNORE in filepath:
+            continue
         if os.path.isdir(filepath):
             shutil.rmtree(filepath, ignore_errors=True)
         elif os.path.isfile(filepath):
             os.unlink(filepath)
     os.makedirs(HOME, exist_ok=True)
     os.makedirs(SYNC, exist_ok=True)
-    
+
 
 def list_contents():
     """ List all contents in test directory. """
     for dirpath, dirnames, filenames in os.walk(os.path.dirname(HOME)):
-        if IGNORE in dirpath: continue
+        if IGNORE in dirpath:
+            continue
         for dirname in sorted(dirnames):
             dirpath = os.path.join(dirpath, dirname)
             if utils.is_link(dirpath):
@@ -96,7 +100,8 @@ def check(manifest):
                 raise Exception(f'File {cyan(item.path)} not -> {cyan(item.to)}')
     # PASS 2: Make sure there are no extra files or directories
     for dirpath, dirnames, filenames in os.walk(os.path.dirname(HOME)):
-        if IGNORE in dirpath: continue
+        if IGNORE in dirpath:
+            continue
         for filename in filenames:
             filepath = os.path.join(dirpath, filename)
             if filepath not in allpaths:

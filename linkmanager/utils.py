@@ -1,6 +1,9 @@
 # encoding: utf-8
-import fnmatch, json, os
-import re, subprocess
+import fnmatch
+import json
+import os
+import re
+import subprocess
 from shlex import split
 from linkmanager import FILE, DIR, LINK, CONFIG
 from linkmanager import HOME, LINKROOT, LINKDIR
@@ -8,11 +11,11 @@ from linkmanager import HOME, LINKROOT, LINKDIR
 try:
     from termcolor import colored, cprint
 except ImportError:
-    colored = lambda msg, color: msg
-    cprint = lambda msg, color: print(msg)
+    colored = lambda msg, color: msg  # noqa
+    cprint = lambda msg, color: print(msg)  # noqa
 
-cyan = lambda msg: colored(msg, 'cyan')
-BYTES = ((2**30,'G'), (2**20,'M'), (2**10,'K'), (1,''))
+cyan = lambda msg: colored(msg, 'cyan')  # noqa
+BYTES = ((2**30,'G'), (2**20,'M'), (2**10,'K'), (1,''))  # noqa
 HOSTNAME_REGEX = r'^(.+?)\[([\w\-]+?)\]$'
 IGNORES = [
     'LINKROOT',             # LINKROOT flag
@@ -44,7 +47,7 @@ def find_linkroot(maxdepth=3):
         linkroot = os.path.dirname(result.decode('utf8').strip())
         print('Linkroot is not specified in your configuration.')
         question = f'Would you like to set it to {cyan(linkroot)}? [y/n]'
-        response = get_input(None, question, choices=['y','n'])
+        response = get_input(None, question, choices=['y', 'n'])
         if response == 'y':
             save_config('linkroot', linkroot)
             return linkroot
@@ -87,9 +90,12 @@ def get_fsize(path):
 
 def get_ftype(path):
     """ Return file, dir, or link. """
-    if is_link(path): return LINK
-    if is_file(path): return FILE
-    if is_dir(path): return DIR
+    if is_link(path):
+        return LINK
+    if is_file(path):
+        return FILE
+    if is_dir(path):
+        return DIR
 
 
 def get_input(result, msg, default=None, choices=None):
@@ -186,7 +192,7 @@ def save_config(key, value):
     """ Save a new configuration option. """
     print(f'Saving configuration value {key}={value} to {CONFIG}')
     config = get_config()
-    config.update({key:value})
+    config.update({key: value})
     with open(CONFIG, 'w') as handle:
         json.dump(config, handle)
     return config
@@ -198,7 +204,7 @@ def value_to_str(value, places=0):
         return value or ''
     for div, unit in BYTES:
         if value >= div:
-            conversion = round(value/div, int(places)) if places else int(value/div)
+            conversion = round(value / div, int(places)) if places else int(value / div)
             return f'{conversion}{unit}'
     return f'0{unit}'
 

@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 # encoding: utf-8
-import argparse, os, sys
+import argparse
+import os
+import sys
 
 # Add linkmanager to sys.path if not already there. Useful when
 # running this application without officially installing it.
