@@ -1,5 +1,6 @@
 # encoding: utf-8
-import os, shutil
+import os
+import shutil
 from linkmanager import HOSTNAME
 from linkmanager import log, utils, rmlink
 cyan = utils.cyan
@@ -20,7 +21,7 @@ def _promt_to_overwrite(homepath, dryrun=False, force=None):
     if utils.is_broken_link(homepath):
         return os.remove(homepath)
     ftype = utils.get_ftype(homepath)
-    if not dryrun and force not in 'yesno':
+    if not dryrun and force not in ['yes', 'no']:
         question = f'Would you like overwrite {ftype} {cyan(homepath)}? [y/n]'
         response = utils.get_input(None, question, choices=['y','n'])
     if dryrun or force == 'yes' or (force is None and response == 'y'):
