@@ -18,10 +18,14 @@ def purge_syncpath(syncpath, dryrun=False):
         log.info(f'Purging {syncpath}')
         if not dryrun:
             utils.safe_unlink(syncpath)
+        return 1
+    return 0
 
 
 def run_command(opts):
     """ List the inventory of links in LINKROOT. """
+    actions = 0
     for ftype, syncpath in utils.iter_linkroot(opts.linkroot):
         if utils.is_deleted(syncpath):
-            purge_syncpath(syncpath, opts.dryrun)
+            actions += purge_syncpath(syncpath, opts.dryrun)
+    return actions

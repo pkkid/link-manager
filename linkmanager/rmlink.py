@@ -24,16 +24,16 @@ def remove_syncpath(syncpath, home, linkroot, dryrun=False, force=None):
     homepath = _syncpath.replace(linkroot, home)
     # Make sure homepath is a symlink pointing to syncpath.
     if utils.linkpath(homepath) != _syncpath:
-        log.info(f'Syncing not enabled for {cyan(homepath)}')
-        return
+        log.debug(f'Syncing not enabled for {cyan(homepath)}')
+        return 0
     # Make sure homepath is pointing to a non-existing file.
     if utils.exists(utils.linkpath(homepath)):
-        log.info(f'Syncing appears valid for {cyan(homepath)}')
-        return
+        log.debug(f'Syncing appears valid for {cyan(homepath)}')
+        return 0
     # Make sure syncpath exists
     if not utils.exists(syncpath):
-        log.info(f'Sync path does not exist {cyan(syncpath)}')
-        return
+        log.debug(f'Sync path does not exist {cyan(syncpath)}')
+        return 0
     # Delete homepath & copy syncpath to its location!
     ftype = utils.get_ftype(syncpath)
     log.info(f'Removing sync for {ftype} {cyan(homepath)}')
@@ -41,19 +41,25 @@ def remove_syncpath(syncpath, home, linkroot, dryrun=False, force=None):
         if utils.is_link(syncpath):
             utils.safe_unlink(homepath)
             os.symlink(os.readlink(syncpath), homepath)
+            return 1
         elif utils.is_file(syncpath):
             utils.safe_unlink(homepath)
             shutil.copyfile(syncpath, homepath)
+            return 1
         elif utils.is_dir(syncpath):
             utils.safe_unlink(homepath)
             shutil.copytree(syncpath, homepath)
             utils.safe_unlink(os.path.join(homepath, LINKDIR))
+            return 1
+    return 0
 
 
 def run_command(opts):
     """ Remove an entry from LINKROOT. """
+    actions = 0
     homepaths = utils.validate_paths(opts.paths, opts.home, opts.linkroot)
     for homepath in homepaths:
         syncpath = homepath.replace(opts.home, opts.linkroot)
-        remove_syncpath(syncpath, opts.home, opts.linkroot, opts.dryrun, opts.force)
+        actions += remove_syncpath(syncpath, opts.home, opts.linkroot, opts.dryrun, opts.force)
         os.rename(syncpath, f'{syncpath}[{DELETED}]')
+    return actions

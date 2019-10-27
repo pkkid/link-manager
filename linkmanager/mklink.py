@@ -15,6 +15,7 @@ def get_options(parser):
 
 def run_command(opts):
     """ Create a new entry in linkroot to sync. """
+    actions = 0
     homepaths = utils.validate_paths(opts.paths, opts.home, opts.linkroot)
     for homepath in homepaths:
         syncpath = homepath.replace(opts.home, opts.linkroot)
@@ -29,10 +30,14 @@ def run_command(opts):
             os.makedirs(os.path.dirname(syncpath), exist_ok=True)
             if utils.is_link(homepath):
                 os.symlink(os.readlink(homepath), syncpath)
+                actions += 1
             elif utils.is_file(homepath):
                 shutil.copyfile(homepath, syncpath)
+                actions += 1
             elif utils.is_dir(homepath):
                 shutil.copytree(homepath, syncpath)
                 open(os.path.join(syncpath, LINKDIR), 'a').close()
+                actions += 1
         # Create the symlink
-        cplinks.create_symlink(syncpath, opts.home, opts.linkroot, opts.dryrun, force='yes')
+        actions += cplinks.create_symlink(syncpath, opts.home, opts.linkroot, opts.dryrun, force='yes')
+    return actions

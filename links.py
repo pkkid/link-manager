@@ -13,7 +13,7 @@ if projectroot not in sys.path:
 from linkmanager import HOME  # noqa
 from linkmanager import setconfig, inventory  # noqa
 from linkmanager import mklink, cplinks, rmlink, purge  # noqa
-from linkmanager import utils  # noqa
+from linkmanager import log, utils  # noqa
 from linkmanager.setconfig import LOGLEVEL_CHOICES, FORCE_CHOICES  # noqa
 
 MODULES = [setconfig, inventory, mklink, cplinks, rmlink, purge]
@@ -38,7 +38,10 @@ if __name__ == '__main__':
         _add_global_options(command)
     # Read options and configuration
     opts = utils.Bunch(vars(parser.parse_args()))
+    log.setLevel(opts.loglevel.upper())
     # log.setLevel(opts.loglevel.upper())
     # Run the specified command
     opts.linkroot = utils.validate_linkroot(opts.linkroot)
-    callback = globals().get(opts.command).run_command(opts)
+    actions = globals().get(opts.command).run_command(opts)
+    if not actions:
+        log.info('Nothing to do.')

@@ -27,8 +27,10 @@ def _promt_to_overwrite(homepath, dryrun=False, force=None):
     if dryrun or force == 'yes' or (force is None and response == 'y'):
         log.info(f'Deleting {ftype} {cyan(homepath)}')
         if (utils.is_file(homepath) or utils.is_link(homepath)) and not dryrun:
+            log.debug(f'Deleting file {cyan(homepath)}')
             os.remove(homepath)
         elif utils.is_dir(homepath) and not dryrun:
+            log.debug(f'Deleting dir {cyan(homepath)}')
             shutil.rmtree(homepath)
 
 
@@ -48,7 +50,7 @@ def create_symlink(syncpath, home, linkroot, dryrun=False, force=None):
     syncpath = os.readlink(syncpath) if os.path.islink(syncpath) else syncpath
     if utils.linkpath(homepath) == syncpath:
         log.debug(f'Syncing already setup for {cyan(homepath)}')
-        return
+        return 0
     # Prompt to remove the homepath if it exists.
     _promt_to_overwrite(homepath, dryrun, force)
     # Create the symlink!
@@ -57,9 +59,13 @@ def create_symlink(syncpath, home, linkroot, dryrun=False, force=None):
         if not dryrun:
             os.makedirs(os.path.dirname(homepath), exist_ok=True)
             os.symlink(syncpath, homepath)
+        return 1
+    return 0
 
 
 def run_command(opts):
     """ Symlink synced files and dirs to home directory. """
+    actions = 0
     for ftype, syncpath in utils.iter_linkroot(opts.linkroot):
-        create_symlink(syncpath, opts.home, opts.linkroot, opts.dryrun, opts.force)
+        actions += create_symlink(syncpath, opts.home, opts.linkroot, opts.dryrun, opts.force)
+    return actions
