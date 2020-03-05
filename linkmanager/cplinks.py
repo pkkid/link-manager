@@ -23,7 +23,7 @@ def _clone_repos(homepath):
             repopath = os.path.join(homedir, reponame)
             if not os.path.exists(repopath):
                 try:
-                    log.info(f'Cloning {repo} {repopath}')
+                    log.info(f'Cloning {repo} {repopath} from file {homepath}')
                     cmd = f'git clone {repo} {repopath}'
                     subprocess.check_call(cmd, shell=True)
                     count += 1
