@@ -6,7 +6,7 @@ import sys
 
 FILE, DIR, LINK = 'file', 'dir', 'link'
 DELETED = 'DELETED'
-LINKROOT, LINKDIR, REPOS = 'LINKROOT', 'LINKDIR', 'REPOS'
+LINKROOT, LINKDIR = 'LINKROOT', 'LINKDIR'
 
 HOME = os.path.expanduser('~')
 HOSTNAME = socket.gethostname()

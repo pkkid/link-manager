@@ -2,7 +2,7 @@
 import os
 import shutil
 import subprocess
-from linkmanager import HOSTNAME, REPOS
+from linkmanager import HOSTNAME
 from linkmanager import log, utils, rmlink
 cyan = utils.cyan
 
@@ -11,25 +11,6 @@ def get_options(parser):
     """ Command line options for cplinks. """
     options = parser.add_parser('cplinks', help='symlink synced files and dirs to home directory')
     return options
-
-
-def _clone_repos(homepath):
-    """ Cone the repos specified in homepath. """
-    with open(homepath) as handle:
-        count = 0
-        for repo in handle.read().strip().split('\n'):
-            homedir = os.path.dirname(homepath)
-            reponame = os.path.basename(repo).replace('.git', '')
-            repopath = os.path.join(homedir, reponame)
-            if not os.path.exists(repopath):
-                try:
-                    log.info(f'Cloning {repo} {repopath} from file {homepath}')
-                    cmd = f'git clone {repo} {repopath}'
-                    subprocess.check_call(cmd, shell=True)
-                    count += 1
-                except Exception as err:
-                    log.error(f'Error cloning {repo}; {err}')
-        return count
 
 
 def _promt_to_overwrite(homepath, dryrun=False, force=None):
@@ -70,10 +51,7 @@ def create_symlink(syncpath, home, linkroot, dryrun=False, force=None):
     syncpath = os.readlink(syncpath) if os.path.islink(syncpath) else syncpath
     if utils.linkpath(homepath) == syncpath:
         log.debug(f'Syncing already setup for {cyan(homepath)}')
-        count = 0
-        if os.path.basename(homepath) == REPOS:
-            count = _clone_repos(homepath)
-        return count
+        return 0
     # Prompt to remove the homepath if it exists.
     _promt_to_overwrite(homepath, dryrun, force)
     # Create the symlink!
