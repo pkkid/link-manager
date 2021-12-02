@@ -24,7 +24,7 @@ def remove_syncpath(syncpath, home, linkroot, dryrun=False, force=None):
     homepath = _syncpath.replace(linkroot, home)
     # Make sure homepath is a symlink pointing to syncpath.
     if utils.linkpath(homepath) != _syncpath:
-        log.debug(f'Syncing not enabled for {cyan(homepath)}')
+        log.debug(f'DISABLED - {cyan(homepath)}')
         return 0
     # Make sure homepath is pointing to a non-existing file.
     if utils.exists(utils.linkpath(homepath)):
@@ -32,7 +32,7 @@ def remove_syncpath(syncpath, home, linkroot, dryrun=False, force=None):
         return 0
     # Make sure syncpath exists
     if not utils.exists(syncpath):
-        log.debug(f'Sync path does not exist {cyan(syncpath)}')
+        log.debug(f'MISSING  - {cyan(syncpath)}')
         return 0
     # Delete homepath & copy syncpath to its location!
     ftype = utils.get_ftype(syncpath)

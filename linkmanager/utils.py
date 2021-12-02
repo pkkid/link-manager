@@ -15,6 +15,7 @@ except ImportError:
     cprint = lambda msg, color: print(msg)  # noqa
 
 cyan = lambda msg: colored(msg, 'cyan')  # noqa
+grey = lambda msg: colored(msg, 'grey')  # noqa
 BYTES = ((2**30,'G'), (2**20,'M'), (2**10,'K'), (1,''))  # noqa
 HOSTNAME_REGEX = r'^(.+?)\[([\w\-]+?)\]$'
 IGNORES = [

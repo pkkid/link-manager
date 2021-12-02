@@ -1,7 +1,6 @@
 # encoding: utf-8
 import os
 import shutil
-import subprocess
 from linkmanager import HOSTNAME
 from linkmanager import log, utils, rmlink
 cyan = utils.cyan
@@ -50,13 +49,13 @@ def create_symlink(syncpath, home, linkroot, dryrun=False, force=None):
     homepath = _syncpath.replace(linkroot, home)
     syncpath = os.readlink(syncpath) if os.path.islink(syncpath) else syncpath
     if utils.linkpath(homepath) == syncpath:
-        log.debug(f'Syncing already setup for {cyan(homepath)}')
+        log.debug(utils.colored(f'OK       - {homepath} -> {syncpath}', 'green', attrs=['dark']))
         return 0
     # Prompt to remove the homepath if it exists.
     _promt_to_overwrite(homepath, dryrun, force)
     # Create the symlink!
     if not utils.exists(homepath):
-        log.info(f'Syncing {cyan(homepath)} -> {cyan(syncpath)}')
+        log.info(f'SYNCING  - {cyan(homepath)} -> {cyan(syncpath)}')
         if not dryrun:
             os.makedirs(os.path.dirname(homepath), exist_ok=True)
             os.symlink(syncpath, homepath)
