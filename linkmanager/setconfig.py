@@ -10,7 +10,7 @@ LOGLEVEL_CHOICES = ['debug', 'info', 'error']
 
 def get_options(parser):
     """ Command line options for setconfig. """
-    options = parser.add_parser('setconfig', help=f'save a new configuration value')
+    options = parser.add_parser('setconfig', help='save a new configuration value')
     options.add_argument('name', help='name of the config to be set')
     options.add_argument('value', help='value of the config to be set')
     return options

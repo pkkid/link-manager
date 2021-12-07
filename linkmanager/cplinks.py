@@ -25,12 +25,12 @@ def _promt_to_overwrite(homepath, dryrun=False, force=None):
         question = f'Would you like overwrite {ftype} {cyan(homepath)}? [y/n]'
         response = utils.get_input(None, question, choices=['y', 'n'])
     if dryrun or force == 'yes' or (force is None and response == 'y'):
-        log.info(f'Deleting {ftype} {cyan(homepath)}')
+        log.info(f'REPLACE  - {ftype} {cyan(homepath)}')
         if (utils.is_file(homepath) or utils.is_link(homepath)) and not dryrun:
-            log.debug(f'Deleting file {cyan(homepath)}')
+            log.debug(f'REPLACE - file {cyan(homepath)}')
             os.remove(homepath)
         elif utils.is_dir(homepath) and not dryrun:
-            log.debug(f'Deleting dir {cyan(homepath)}')
+            log.debug(f'REPLACE  - dir {cyan(homepath)}')
             shutil.rmtree(homepath)
 
 
@@ -49,13 +49,13 @@ def create_symlink(syncpath, home, linkroot, dryrun=False, force=None):
     homepath = _syncpath.replace(linkroot, home)
     syncpath = os.readlink(syncpath) if os.path.islink(syncpath) else syncpath
     if utils.linkpath(homepath) == syncpath:
-        log.debug(utils.colored(f'OK       - {homepath} -> {syncpath}', 'green', attrs=['dark']))
+        log.debug(f'DONE     - {homepath} -> {syncpath}')
         return 0
     # Prompt to remove the homepath if it exists.
     _promt_to_overwrite(homepath, dryrun, force)
     # Create the symlink!
     if not utils.exists(homepath):
-        log.info(f'SYNCING  - {cyan(homepath)} -> {cyan(syncpath)}')
+        log.info(f'SYMLINK  - {cyan(homepath)} -> {cyan(syncpath)}')
         if not dryrun:
             os.makedirs(os.path.dirname(homepath), exist_ok=True)
             os.symlink(syncpath, homepath)

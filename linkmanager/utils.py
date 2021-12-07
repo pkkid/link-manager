@@ -15,14 +15,14 @@ except ImportError:
     cprint = lambda msg, color: print(msg)  # noqa
 
 cyan = lambda msg: colored(msg, 'cyan')  # noqa
-grey = lambda msg: colored(msg, 'grey')  # noqa
 BYTES = ((2**30,'G'), (2**20,'M'), (2**10,'K'), (1,''))  # noqa
 HOSTNAME_REGEX = r'^(.+?)\[([\w\-]+?)\]$'
 IGNORES = [
     'LINKROOT',             # LINKROOT flag
     '*_Conflict*',          # Synology conflict file
     '*conflicted copy*'     # Dropbox conflict file
-    '*[Conflict]*'          # Google Drive conflict file
+    '*[Conflict]*',         # Google Drive conflict file
+    '*.DS_Store',           # MacOS BS File
 ]
 
 
@@ -219,7 +219,7 @@ def validate_linkroot(linkroot):
             msg += '\nYou can configure this setting by running the following command:'
             msg += cyan('\n> links.py setconfig linkroot <LINKROOT>')
             raise SystemExit(msg)
-    linkroot = linkroot.rstrip('/')
+    linkroot = os.path.expanduser(linkroot.rstrip('/'))
     if not os.path.isdir(linkroot):
         raise SystemExit(f'The specified linkroot does not exist: {cyan(linkroot)}')
     if not os.path.isfile(os.path.join(linkroot, LINKROOT)):
@@ -237,7 +237,7 @@ def validate_paths(paths, home, linkroot):
         if not exists(path):
             raise SystemExit(f'The specified path does not exist: {cyan(path)}')
         if not path.startswith(home):
-            raise SystemExit(f'Specified path must exist in your home directory.')
+            raise SystemExit('Specified path must exist in your home directory.')
         if path.startswith(linkroot):
-            raise SystemExit(f'Specified path must not be in the LINKROOT directory.')
+            raise SystemExit('Specified path must not be in the LINKROOT directory.')
     return paths
